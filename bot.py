@@ -5,7 +5,7 @@ from flask import Flask
 from threading import Thread
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-API_TOKEN = "8497566219:AAE1PvUa8L5VYhyaoqhJyJD3ro9jN2kRv3A"  # अपना बॉट टोकन यहाँ डालें
+API_TOKEN = "8497566219:AAH8DvJJPa1WxMU0hqJcQKx1QBhfptbiwQg"  # अपना बॉट टोकन यहाँ डालें
 bot = telebot.TeleBot(API_TOKEN)
 ADMIN_ID = 8380823727
 
@@ -33,6 +33,13 @@ def init_db():
             bundles TEXT,
             price REAL,
             status TEXT DEFAULT 'Available'
+        )
+    ''')
+    # पेंडिंग ऑर्डर्स को ट्रैक करने के लिए टेबल
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS pending_orders (
+            user_id INTEGER,
+            item_id INTEGER
         )
     ''')
     conn.commit()
@@ -102,9 +109,14 @@ def callbacks(call):
             return
             
         level, bundles, price = item
-        markup = InlineKeyboardMarkup()
-        markup.add(InlineKeyboardButton("🎟️ Enter Redeem Code Here", callback_data=f"pay_{item_id}"))
-        markup.add(InlineKeyboardButton("« Back", callback_data="buy_ff"))
+        
+        # यूज़र को पेंडिंग आर्डर में सेव करें ताकि बोट समझ जाए कि यह यूज़र किस आईडी को खरीदना चाहता है
+        conn = sqlite3.connect('ff_id_store.db', check_same_thread=False)
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM pending_orders WHERE user_id=?", (user.id,))
+        cursor.execute("INSERT INTO pending_orders (user_id, item_id) VALUES (?, ?)", (user.id, item_id))
+        conn.commit()
+        conn.close()
         
         pay_text = (
             f"🛒 **ID BOOKING DETAILS**\n"
@@ -113,20 +125,12 @@ def callbacks(call):
             f"📦 **Collection:** {bundles}\n"
             f"💵 **Price:** ₹{price}\n\n"
             f"📌 **How to Purchase:**\n"
-            f"1️⃣ Purchase a **Google Play Redeem Code** worth ₹{price} from any store.\n"
-            f"2️⃣ Click the button below **'Enter Redeem Code Here'**!"
+            f"1️⃣ Purchase a **Google Play Redeem Code** worth ₹{price}.\n"
+            f"2️⃣ **Now simply type and send your Google Play Redeem Code here in chat!**"
         )
+        markup = InlineKeyboardMarkup()
+        markup.add(InlineKeyboardButton("« Back", callback_data="buy_ff"))
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=pay_text, parse_mode='Markdown', reply_markup=markup)
-
-    elif call.data.startswith("pay_"):
-        item_id = call.data.replace("pay_", "")
-        instruction_msg = (
-            "✍️️ **Send Your Google Play Redeem Code:**\n\n"
-            "Please type and send your **full Google Play Redeem Code** (e.g., `ABCD1234EFGH5678`) directly in this chat.\n"
-            "Once sent, it will be automatically forwarded to the admin for verification."
-        )
-        msg = bot.send_message(call.message.chat.id, instruction_msg, parse_mode='Markdown')
-        bot.register_next_step_handler(msg, process_redeem_code, item_id)
 
     elif call.data == "admin_panel":
         if user.id != ADMIN_ID:
@@ -154,6 +158,53 @@ def callbacks(call):
         bot.answer_callback_query(call.id)
         bot.send_message(call.message.chat.id, "💬 For support, contact: @Momshad_00")
 
+@bot.message_handler(func=lambda message: not message.text.startswith('/'))
+def handle_text_messages(message):
+    user = message.from_user
+    if user.id == ADMIN_ID:
+        return  # एडमिन के नॉर्मल मैसेज को इग्नोर करेगा
+        
+    conn = sqlite3.connect('ff_id_store.db', check_same_thread=False)
+    cursor = conn.cursor()
+    cursor.execute("SELECT item_id FROM pending_orders WHERE user_id=?", (user.id,))
+    pending = cursor.fetchone()
+    
+    if not pending:
+        return  # अगर यूज़र ने कोई आईडी सेलेक्ट नहीं की है तो कुछ नहीं करेगा
+        
+    item_id = pending[0]
+    redeem_code = message.text.strip()
+    
+    cursor.execute("SELECT level, bundles, price FROM stock WHERE id=?", (item_id,))
+    item = cursor.fetchone()
+    
+    # आर्डर प्रोसेस होने के बाद पेंडिंग से हटा दें
+    cursor.execute("DELETE FROM pending_orders WHERE user_id=?", (user.id,))
+    conn.commit()
+    conn.close()
+    
+    if item:
+        level, bundles, price = item
+        item_desc = f"Level {level} | {bundles} | ₹{price}"
+    else:
+        item_desc = "Unknown Item"
+        
+    username = f"@{user.username}" if user.username else "No Username"
+    
+    admin_msg = (
+        f"🔔 **NEW PAYMENT RECEIVED!**\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"👤 **Buyer:** {user.first_name}\n"
+        f"🔗 **Username:** {username}\n"
+        f"🆔 **User ID:** `{user.id}`\n"
+        f"📦 **Item Details:** {item_desc}\n"
+        f"🎟️ **Redeem Code:** `{redeem_code}`\n\n"
+        f"👉 To deliver this ID, send command:\n"
+        f"`/deliverff {user.id} {item_id}`"
+    )
+    bot.send_message(ADMIN_ID, admin_msg, parse_mode='Markdown')
+    bot.reply_to(message, "✅ Your redeem code has been successfully sent to the admin! You will receive the ID after verification.")
+
 @bot.message_handler(commands=['addff'])
 def add_ff(message):
     if message.from_user.id != ADMIN_ID:
@@ -172,37 +223,6 @@ def add_ff(message):
         bot.reply_to(message, f"✅ ID successfully added!\n🔥 Level: {level}\n💰 Price: ₹{price}")
     except Exception as e:
         bot.reply_to(message, "❌ Invalid format! Use this format:\n`/addff 63 | UID 1772894853 | 1500`", parse_mode='Markdown')
-
-def process_redeem_code(message, item_id):
-    redeem_code = message.text.strip()
-    user = message.from_user
-    username = f"@{user.username}" if user.username else "No Username"
-    
-    conn = sqlite3.connect('ff_id_store.db', check_same_thread=False)
-    cursor = conn.cursor()
-    cursor.execute("SELECT level, bundles, price FROM stock WHERE id=?", (item_id,))
-    item = cursor.fetchone()
-    conn.close()
-    
-    if item:
-        level, bundles, price = item
-        item_desc = f"Level {level} | {bundles} | ₹{price}"
-    else:
-        item_desc = "Unknown Item"
-    
-    admin_msg = (
-        f"🔔 **NEW PAYMENT RECEIVED!**\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"👤 **Buyer:** {user.first_name}\n"
-        f"🔗 **Username:** {username}\n"
-        f"🆔 **User ID:** `{user.id}`\n"
-        f"📦 **Item Details:** {item_desc}\n"
-        f"🎟️ **Redeem Code:** `{redeem_code}`\n\n"
-        f"👉 To deliver this ID, send command:\n"
-        f"`/deliverff {user.id} {item_id}`"
-    )
-    bot.send_message(ADMIN_ID, admin_msg, parse_mode='Markdown')
-    bot.reply_to(message, "✅ Your redeem code has been successfully sent to the admin! You will receive the ID after verification.")
 
 @bot.message_handler(commands=['deliverff'])
 def deliver_ff(message):
@@ -243,6 +263,7 @@ if __name__ == '__main__':
     keep_alive()
     bot.remove_webhook()
     bot.infinity_polling(skip_pending=True)
+        
     
 
     
