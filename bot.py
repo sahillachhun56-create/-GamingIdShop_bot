@@ -2,7 +2,7 @@ import telebot
 import sqlite3
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-API_TOKEN = '8497566219:AAFPKrnggpb_CkjoPH2saUp8NDTjgwIwrBg'  # यहाँ अपना बोट टोकन डालें
+API_TOKEN = "8497566219:AAHjz8OLSm06Ksrl_fwAfGVhVGOBaH6TxOM"  # यहाँ अपना बोट टोकन डालें
 bot = telebot.TeleBot(API_TOKEN)
 
 ADMIN_ID = 8380823727  # आपकी एडमिन आईडी
