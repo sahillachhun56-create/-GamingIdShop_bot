@@ -2,7 +2,7 @@ import telebot
 import sqlite3
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-API_TOKEN = "8497566219:AAHviARd-H7Soc0I-dfIku4eshQWwt3FdiM"
+API_TOKEN = "8497566219:AAEXaU0YUHIDPS8WR-Oa0cOzRUX1qXiLooE"  # अपना टोकन यहाँ रखें
 bot = telebot.TeleBot(API_TOKEN)
 ADMIN_ID = 8380823727
 
@@ -28,25 +28,23 @@ def menu(message):
     user_id = message.from_user.id
     markup = InlineKeyboardMarkup(row_width=1)
     
-    # मुख्य विकल्प
     markup.add(
-        InlineKeyboardButton("🔥 उपलब्ध फ्री फायर मैक्स आईडी देखें", callback_data="buy_ff"),
-        InlineKeyboardButton("💬 सहायता और सपोर्ट", callback_data="support")
+        InlineKeyboardButton("🔥 Buy Free Fire Max IDs", callback_data="buy_ff"),
+        InlineKeyboardButton("💬 Customer Support", callback_data="support")
     )
     
-    # अगर यूजर एडमिन है, तभी उसे एडमिन पैनल का बटन दिखेगा
     if user_id == ADMIN_ID:
-        markup.add(InlineKeyboardButton("⚙️ एडमिन पैनल (आईडी जोड़ें)", callback_data="admin_panel"))
+        markup.add(InlineKeyboardButton("⚙️ Admin Panel (Add ID)", callback_data="admin_panel"))
 
     text = (
-        "⚡ <b>OFFICIAL GAMING ID STORE</b> ⚡\n"
+        "⚡ **OFFICIAL GAMING ID STORE** ⚡\n"
         "━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "🎯 <i>भरोसेमंद और सुरक्षित फ्री फायर मैक्स आईडी का सबसे बड़ा ठिकाना!</i>\n\n"
-        "💳 <b>पेमेंट का तरीका:</b> Google Play Redeem Code\n"
-        "🛡️ <b>गारंटी:</b> 100% सुरक्षित और फास्ट डिलीवरी\n\n"
-        "👇 <b>नीचे दिए गए बटन से अपनी मनपसंद आईडी चुनें:</b>"
+        "🎯 *Trusted & 100% Secure Free Fire Max IDs Marketplace!*\n\n"
+        "💳 **Payment Mode:** Google Play Redeem Code\n"
+        "🛡️ **Guarantee:** Instant Delivery & Verified Accounts\n\n"
+        "👇 **Select an option below to get started:**"
     )
-    bot.send_message(message.chat.id, text, parse_mode='HTML', reply_markup=markup)
+    bot.send_message(message.chat.id, text, parse_mode='Markdown', reply_markup=markup)
 
 @bot.callback_query_handler(func=lambda call: True)
 def callbacks(call):
@@ -59,21 +57,21 @@ def callbacks(call):
         conn.close()
         
         if not items:
-            bot.answer_callback_query(call.id, "⚠️ क्षमा करें, फिलहाल कोई भी आईडी स्टॉक में नहीं है!", show_alert=True)
+            bot.answer_callback_query(call.id, "⚠️ Sorry, no IDs are currently available in stock!", show_alert=True)
             return
             
         markup = InlineKeyboardMarkup(row_width=1)
         for item in items:
             item_id, level, bundles, price = item
             markup.add(InlineKeyboardButton(f"🆔 Level {level} | 📦 {bundles} | 💰 ₹{price}", callback_data=f"buy_{item_id}"))
-        markup.add(InlineKeyboardButton("« मुख्य मेनू पर जाएं", callback_data="main_menu"))
+        markup.add(InlineKeyboardButton("« Back to Main Menu", callback_data="main_menu"))
         
         bot.edit_message_text(
-            "💎 <b>उपलब्ध फ्री फायर मैक्स आईडीज़</b>\n\n"
-            "खरीदने के लिए नीचे दी गई किसी भी आईडी पर क्लिक करें:",
+            "💎 **AVAILABLE FREE FIRE MAX IDS**\n\n"
+            "Click on any ID below to check details and buy:",
             chat_id=call.message.chat.id,
             message_id=call.message.message_id,
-            parse_mode='HTML',
+            parse_mode='Markdown',
             reply_markup=markup
         )
         
@@ -86,59 +84,59 @@ def callbacks(call):
         conn.close()
         
         if not item:
-            bot.answer_callback_query(call.id, "❌ यह आईडी पहले ही बिक चुकी है!", show_alert=True)
+            bot.answer_callback_query(call.id, "❌ This ID has already been sold!", show_alert=True)
             return
             
         level, bundles, price = item
         pay_text = (
-            f"🛒 <b>आईडी बुकिंग विवरण</b>\n"
+            f"🛒 **ID BOOKING DETAILS**\n"
             f"━━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"🔥 <b>लेवल:</b> {level}\n"
-            f"📦 <b>कलेक्शन:</b> {bundles}\n"
-            f"💵 <b>कीमत:</b> ₹{price}\n\n"
-            f"📌 <b>खरीदने की प्रक्रिया:</b>\n"
-            f"1️⃣ किसी भी स्टोर से ₹{price} का <b>Google Play Redeem Code</b> खरीदें।\n"
-            f"2️⃣ कोड भेजने के लिए चैट में यह कमांड भेजें:\n\n"
-            f"👉 <code>/redeem {item_id} [यहाँ अपना गूगल प्ले कोड लिखें]</code>"
+            f"🔥 **Level:** {level}\n"
+            f"📦 **Collection:** {bundles}\n"
+            f"💵 **Price:** ₹{price}\n\n"
+            f"📌 **How to Purchase:**\n"
+            f"1️⃣ Purchase a **Google Play Redeem Code** worth ₹{price} from any store.\n"
+            f"2️⃣ Send the code in chat using this command:\n\n"
+            f"👉 `/redeem {item_id} [Your Google Play Code]`"
         )
-        bot.send_message(call.message.chat.id, pay_text, parse_mode='HTML')
+        bot.send_message(call.message.chat.id, pay_text, parse_mode='Markdown')
         
     elif call.data == "admin_panel":
         if user.id != ADMIN_ID:
-            bot.answer_callback_query(call.id, "⚠️ यह केवल एडमिन के लिए है!", show_alert=True)
+            bot.answer_callback_query(call.id, "⚠️ Access Denied! Admin only.", show_alert=True)
             return
         admin_text = (
-            "⚙️ <b>एडमिन कंट्रोल पैनल</b>\n"
+            "⚙️ **ADMIN CONTROL PANEL**\n"
             "━━━━━━━━━━━━━━━━━━━━━━━\n"
-            "नई आईडी जोड़ने के लिए इस फॉर्मेट का उपयोग करें:\n\n"
-            "<code>/addff [Level] | [Bundles] | [Price]</code>\n\n"
-            "<b>उदाहरण:</b>\n"
-            "<code>/addff 65 | Cobra Bundle, Max Gun | 499</code>"
+            "To add a new ID, use the format below:\n\n"
+            "`/addff [Level] | [Bundles] | [Price]`\n\n"
+            "**Example:**\n"
+            "`/addff 65 | Cobra Bundle, Max Gun | 499`"
         )
-        bot.send_message(call.message.chat.id, admin_text, parse_mode='HTML')
+        bot.send_message(call.message.chat.id, admin_text, parse_mode='Markdown')
         
     elif call.data == "main_menu":
         markup = InlineKeyboardMarkup(row_width=1)
         markup.add(
-            InlineKeyboardButton("🔥 उपलब्ध फ्री फायर मैक्स आईडी देखें", callback_data="buy_ff"),
-            InlineKeyboardButton("💬 सहायता और सपोर्ट", callback_data="support")
+            InlineKeyboardButton("🔥 Buy Free Fire Max IDs", callback_data="buy_ff"),
+            InlineKeyboardButton("💬 Customer Support", callback_data="support")
         )
         if user.id == ADMIN_ID:
-            markup.add(InlineKeyboardButton("⚙️ एडमिन पैनल (आईडी जोड़ें)", callback_data="admin_panel"))
+            markup.add(InlineKeyboardButton("⚙️ Admin Panel (Add ID)", callback_data="admin_panel"))
             
         bot.edit_message_text(
-            "⚡ <b>OFFICIAL GAMING ID STORE</b> ⚡\n"
+            "⚡ **OFFICIAL GAMING ID STORE** ⚡\n"
             "━━━━━━━━━━━━━━━━━━━━━━━\n"
-            "🎯 <i>भरोसेमंद और सुरक्षित फ्री फायर मैक्स आईडी का सबसे बड़ा ठिकाना!</i>",
+            "🎯 *Trusted & 100% Secure Free Fire Max IDs Marketplace!*",
             chat_id=call.message.chat.id,
             message_id=call.message.message_id,
-            parse_mode='HTML',
+            parse_mode='Markdown',
             reply_markup=markup
         )
         
     elif call.data == "support":
         bot.answer_callback_query(call.id)
-        bot.send_message(call.message.chat.id, "💬 सहायता के लिए संपर्क करें: @Momshad_00")
+        bot.send_message(call.message.chat.id, "💬 For support, contact: @Momshad_00")
 
 @bot.message_handler(commands=['addff'])
 def add_ff(message):
@@ -155,29 +153,29 @@ def add_ff(message):
         conn.commit()
         conn.close()
         
-        bot.reply_to(message, f"✅ सफलतापूर्व आईडी जोड़ दी गई है!\n🔥 Level: {level}\n💰 Price: ₹{price}")
+        bot.reply_to(message, f"✅ ID successfully added!\n🔥 Level: {level}\n💰 Price: ₹{price}")
     except Exception as e:
-        bot.reply_to(message, f"❌ फॉर्मेट गलत है! सही तरीका इस्तेमाल करें:\n<code>/addff 65 | Bundle Name | 499</code>", parse_mode='HTML')
+        bot.reply_to(message, f"❌ Invalid format! Use correct format:\n`/addff 65 | Bundle Name | 499`", parse_mode='Markdown')
 
 @bot.message_handler(commands=['redeem'])
 def send_redeem(message):
     args = message.text.split(maxsplit=2)
     if len(args) < 3:
-        bot.reply_to(message, "❌ सही तरीका उपयोग करें:\n<code>/redeem [ID] [Google Play Code]</code>", parse_mode='HTML')
+        bot.reply_to(message, "❌ Correct usage:\n`/redeem [ID] [Google Play Code]`", parse_mode='Markdown')
         return
     item_id, redeem_code, user = args[1], args[2], message.from_user
     
     admin_msg = (
-        f"🔔 <b>नया पेमेंट प्राप्त हुआ!</b>\n"
+        f"🔔 **NEW PAYMENT RECEIVED!**\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"👤 <b>खरीदार:</b> {user.first_name} (ID: <code>{user.id}</code>)\n"
-        f"🆔 <b>आइटम आईडी:</b> <code>{item_id}</code>\n"
-        f"🎟️ <b>रिडीम कोड:</b> <code>{redeem_code}</code>\n\n"
-        f"👉 आईडी डिलीवर करने के लिए यह कमांड भेजें:\n"
-        f"<code>/deliverff {user.id} {item_id}</code>"
+        f"👤 **Buyer:** {user.first_name} (ID: `{user.id}`)\n"
+        f"🆔 **Item ID:** `{item_id}`\n"
+        f"🎟️ **Redeem Code:** `{redeem_code}`\n\n"
+        f"👉 To deliver this ID, send command:\n"
+        f"`/deliverff {user.id} {item_id}`"
     )
-    bot.send_message(ADMIN_ID, admin_msg, parse_mode='HTML')
-    bot.reply_to(message, "✅ आपका रिडीम कोड एडमिन के पास सफलतापूर्वक भेज दिया गया है! जाँच के बाद आपको आईडी मिल जाएगी।")
+    bot.send_message(ADMIN_ID, admin_msg, parse_mode='Markdown')
+    bot.reply_to(message, "✅ Your redeem code has been sent to the admin successfully! You will receive the ID after verification.")
 
 @bot.message_handler(commands=['deliverff'])
 def deliver_ff(message):
@@ -185,7 +183,7 @@ def deliver_ff(message):
         return
     args = message.text.split()
     if len(args) < 3:
-        bot.reply_to(message, "❌ सही फॉर्मेट: <code>/deliverff [User_ID] [Item_ID]</code>", parse_mode='HTML')
+        bot.reply_to(message, "❌ Correct format: `/deliverff [User_ID] [Item_ID]`", parse_mode='Markdown')
         return
         
     buyer_id, item_id = int(args[1]), args[2]
@@ -196,7 +194,7 @@ def deliver_ff(message):
     
     if not item:
         conn.close()
-        bot.reply_to(message, "❌ यह आईडी या तो बिक चुकी है या गलत है!")
+        bot.reply_to(message, "❌ This ID is either sold or invalid!")
         return
         
     level, bundles = item
@@ -206,15 +204,15 @@ def deliver_ff(message):
     
     bot.send_message(
         buyer_id, 
-        f"🎉 <b>बधाई हो! आपकी डील सफल रही।</b>\n"
+        f"🎉 **CONGRATULATIONS! Deal Successful.**\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"🔥 <b>लेवल:</b> {level}\n"
-        f"📦 <b>आईडी पासवर्ड / विवरण:</b>\n<code>{bundles}</code>", 
-        parse_mode='HTML'
+        f"🔥 **Level:** {level}\n"
+        f"📦 **ID & Password Details:**\n`{bundles}`", 
+        parse_mode='Markdown'
     )
-    bot.reply_to(message, "✅ यूजर को सफलतापूर्वक आईडी डिलीवर कर दी गई है!")
+    bot.reply_to(message, "✅ ID successfully delivered to the user!")
 
 if __name__ == '__main__':
+    bot.remove_webhook()
     bot.infinity_polling(skip_pending=True)
-        
     
