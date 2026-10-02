@@ -35,10 +35,9 @@ def init_db():
             status TEXT DEFAULT 'Available'
         )
     ''')
-    # पेंडिंग ऑर्डर्स को ट्रैक करने के लिए टेबल
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS pending_orders (
-            user_id INTEGER,
+            user_id INTEGER PRIMARY KEY,
             item_id INTEGER
         )
     ''')
@@ -50,6 +49,12 @@ init_db()
 @bot.message_handler(commands=['start', 'menu'])
 def menu(message):
     user_id = message.from_user.id
+    conn = sqlite3.connect('ff_id_store.db', check_same_thread=False)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM pending_orders WHERE user_id=?", (user_id,))
+    conn.commit()
+    conn.close()
+
     markup = InlineKeyboardMarkup(row_width=1)
     markup.add(
         InlineKeyboardButton("🔥 Buy Free Fire Max IDs", callback_data="buy_ff"),
@@ -78,7 +83,7 @@ def callbacks(call):
         conn.close()
         
         if not items:
-            bot.answer_callback_query(call.id, "⚠️ Sorry, no IDs are currently available in stock!", show_alert=True)
+            bot.answer_callback_query(call.id, "⚠️️ Sorry, no IDs are currently available in stock!", show_alert=True)
             return
             
         markup = InlineKeyboardMarkup(row_width=1)
@@ -110,11 +115,9 @@ def callbacks(call):
             
         level, bundles, price = item
         
-        # यूज़र को पेंडिंग आर्डर में सेव करें ताकि बोट समझ जाए कि यह यूज़र किस आईडी को खरीदना चाहता है
         conn = sqlite3.connect('ff_id_store.db', check_same_thread=False)
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM pending_orders WHERE user_id=?", (user.id,))
-        cursor.execute("INSERT INTO pending_orders (user_id, item_id) VALUES (?, ?)", (user.id, item_id))
+        cursor.execute("REPLACE INTO pending_orders (user_id, item_id) VALUES (?, ?)", (user.id, item_id))
         conn.commit()
         conn.close()
         
@@ -126,7 +129,9 @@ def callbacks(call):
             f"💵 **Price:** ₹{price}\n\n"
             f"📌 **How to Purchase:**\n"
             f"1️⃣ Purchase a **Google Play Redeem Code** worth ₹{price}.\n"
-            f"2️⃣ **Now simply type and send your Google Play Redeem Code here in chat!**"
+            f"2️⃣ **Now type and send your Google Play Redeem Code here in chat!**\n\n"
+            f"💡 **Example Format:**\n"
+            f"`ABCD1234EFGH5678`"
         )
         markup = InlineKeyboardMarkup()
         markup.add(InlineKeyboardButton("« Back", callback_data="buy_ff"))
@@ -145,6 +150,12 @@ def callbacks(call):
         bot.send_message(call.message.chat.id, admin_text, parse_mode='Markdown')
 
     elif call.data == "main_menu":
+        conn = sqlite3.connect('ff_id_store.db', check_same_thread=False)
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM pending_orders WHERE user_id=?", (user.id,))
+        conn.commit()
+        conn.close()
+
         markup = InlineKeyboardMarkup(row_width=1)
         markup.add(
             InlineKeyboardButton("🔥 Buy Free Fire Max IDs", callback_data="buy_ff"),
@@ -162,7 +173,7 @@ def callbacks(call):
 def handle_text_messages(message):
     user = message.from_user
     if user.id == ADMIN_ID:
-        return  # एडमिन के नॉर्मल मैसेज को इग्नोर करेगा
+        return  
         
     conn = sqlite3.connect('ff_id_store.db', check_same_thread=False)
     cursor = conn.cursor()
@@ -170,7 +181,8 @@ def handle_text_messages(message):
     pending = cursor.fetchone()
     
     if not pending:
-        return  # अगर यूज़र ने कोई आईडी सेलेक्ट नहीं की है तो कुछ नहीं करेगा
+        bot.reply_to(message, "⚠️ Please select an ID first from the menu by typing /menu or /start.")
+        return  
         
     item_id = pending[0]
     redeem_code = message.text.strip()
@@ -178,7 +190,6 @@ def handle_text_messages(message):
     cursor.execute("SELECT level, bundles, price FROM stock WHERE id=?", (item_id,))
     item = cursor.fetchone()
     
-    # आर्डर प्रोसेस होने के बाद पेंडिंग से हटा दें
     cursor.execute("DELETE FROM pending_orders WHERE user_id=?", (user.id,))
     conn.commit()
     conn.close()
@@ -263,6 +274,7 @@ if __name__ == '__main__':
     keep_alive()
     bot.remove_webhook()
     bot.infinity_polling(skip_pending=True)
+    
         
     
 
