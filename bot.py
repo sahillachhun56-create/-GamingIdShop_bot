@@ -176,43 +176,48 @@ def add_ff(message):
 
 @bot.message_handler(commands=['redeem'])
 def send_redeem(message):
-    args = message.text.split(maxsplit=2)
-    if len(args) < 3:
-        bot.reply_to(message, "❌ Correct usage:\n`/redeem [ID] [Google Play Code]`", parse_mode='Markdown')
-        return
+    try:
+        # टेक्स्ट को साफ़ करके आईडी और कोड अलग करना (ब्रैकेट अपनेआप हट जाएंगे)
+        text_clean = message.text.replace('/redeem', '').replace('[', '').replace(']', '').strip()
+        parts = text_clean.split(maxsplit=1)
         
-    item_id = args[1]
-    redeem_code = args[2]
-    user = message.from_user
-    username = f"@{user.username}" if user.username else "No Username"
-    
-    # डेटाबेस से आइटम की पूरी जानकारी निकालें
-    conn = sqlite3.connect('ff_id_store.db', check_same_thread=False)
-    cursor = conn.cursor()
-    cursor.execute("SELECT level, bundles, price FROM stock WHERE id=?", (item_id,))
-    item = cursor.fetchone()
-    conn.close()
-    
-    if item:
-        level, bundles, price = item
-        item_desc = f"Level {level} | {bundles} | ₹{price}"
-    else:
-        item_desc = "Unknown / Invalid Item ID"
-    
-    admin_msg = (
-        f"🔔 **NEW PAYMENT RECEIVED!**\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"👤 **Buyer Name:** {user.first_name}\n"
-        f"🔗 **Username:** {username}\n"
-        f"🆔 **User ID:** `{user.id}`\n"
-        f"📦 **Item ID:** `{item_id}`\n"
-        f"🔥 **Item Details:** {item_desc}\n"
-        f"🎟️ **Redeem Code:** `{redeem_code}`\n\n"
-        f"👉 To deliver this ID, send command:\n"
-        f"`/deliverff {user.id} {item_id}`"
-    )
-    bot.send_message(ADMIN_ID, admin_msg, parse_mode='Markdown')
-    bot.reply_to(message, "✅ Your redeem code has been sent to the admin successfully! You will receive the ID after verification.")
+        if len(parts) < 2:
+            bot.reply_to(message, "❌ Correct usage:\n`/redeem [ID] [Google Play Code]`", parse_mode='Markdown')
+            return
+            
+        item_id = parts[0].strip()
+        redeem_code = parts[1].strip()
+        user = message.from_user
+        username = f"@{user.username}" if user.username else "No Username"
+        
+        conn = sqlite3.connect('ff_id_store.db', check_same_thread=False)
+        cursor = conn.cursor()
+        cursor.execute("SELECT level, bundles, price FROM stock WHERE id=?", (item_id,))
+        item = cursor.fetchone()
+        conn.close()
+        
+        if item:
+            level, bundles, price = item
+            item_desc = f"Level {level} | {bundles} | ₹{price}"
+        else:
+            item_desc = "Unknown / Invalid Item ID"
+        
+        admin_msg = (
+            f"🔔 **NEW PAYMENT RECEIVED!**\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"👤 **Buyer Name:** {user.first_name}\n"
+            f"🔗 **Username:** {username}\n"
+            f"🆔 **User ID:** `{user.id}`\n"
+            f"📦 **Item ID:** `{item_id}`\n"
+            f"🔥 **Item Details:** {item_desc}\n"
+            f"🎟️ **Redeem Code:** `{redeem_code}`\n\n"
+            f"👉 To deliver this ID, send command:\n"
+            f"`/deliverff {user.id} {item_id}`"
+        )
+        bot.send_message(ADMIN_ID, admin_msg, parse_mode='Markdown')
+        bot.reply_to(message, "✅ Your redeem code has been sent to the admin successfully! You will receive the ID after verification.")
+    except Exception as e:
+        bot.reply_to(message, "❌ Error processing your request. Please send like: `/redeem 1 YOUR_CODE`", parse_mode='Markdown')
 
 @bot.message_handler(commands=['deliverff'])
 def deliver_ff(message):
@@ -253,5 +258,6 @@ if __name__ == '__main__':
     keep_alive()
     bot.remove_webhook()
     bot.infinity_polling(skip_pending=True)
+        
 
     
