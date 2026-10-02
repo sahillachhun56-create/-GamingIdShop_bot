@@ -5,7 +5,7 @@ from flask import Flask
 from threading import Thread
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-API_TOKEN = '8497566219:AAHAISe4Dy0IXosfE6mVKk2STaeFw5iOBDQ'
+API_TOKEN = "8497566219:AAGQbkZ1ZZQj4hkZd92gPUwVuE626EhFsv0"
 bot = telebot.TeleBot(API_TOKEN)
 ADMIN_ID = 8380823727
 
