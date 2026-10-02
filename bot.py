@@ -1,10 +1,27 @@
 import telebot
 import sqlite3
+import os
+from flask import Flask
+from threading import Thread
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-API_TOKEN = "8497566219:AAEXaU0YUHIDPS8WR-Oa0cOzRUX1qXiLooE"  # अपना टोकन यहाँ रखें
+API_TOKEN = '8497566219:AAHAISe4Dy0IXosfE6mVKk2STaeFw5iOBDQ'
 bot = telebot.TeleBot(API_TOKEN)
 ADMIN_ID = 8380823727
+
+# Render के लिए छोटा सा Flask सर्वर ताकि सर्विस एक्टिव रहे
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Bot is running!"
+
+def run():
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
+
+def keep_alive():
+    t = Thread(target=run)
+    t.start()
 
 def init_db():
     conn = sqlite3.connect('ff_id_store.db', check_same_thread=False)
@@ -163,13 +180,33 @@ def send_redeem(message):
     if len(args) < 3:
         bot.reply_to(message, "❌ Correct usage:\n`/redeem [ID] [Google Play Code]`", parse_mode='Markdown')
         return
-    item_id, redeem_code, user = args[1], args[2], message.from_user
+        
+    item_id = args[1]
+    redeem_code = args[2]
+    user = message.from_user
+    username = f"@{user.username}" if user.username else "No Username"
+    
+    # डेटाबेस से आइटम की पूरी जानकारी निकालें
+    conn = sqlite3.connect('ff_id_store.db', check_same_thread=False)
+    cursor = conn.cursor()
+    cursor.execute("SELECT level, bundles, price FROM stock WHERE id=?", (item_id,))
+    item = cursor.fetchone()
+    conn.close()
+    
+    if item:
+        level, bundles, price = item
+        item_desc = f"Level {level} | {bundles} | ₹{price}"
+    else:
+        item_desc = "Unknown / Invalid Item ID"
     
     admin_msg = (
         f"🔔 **NEW PAYMENT RECEIVED!**\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"👤 **Buyer:** {user.first_name} (ID: `{user.id}`)\n"
-        f"🆔 **Item ID:** `{item_id}`\n"
+        f"👤 **Buyer Name:** {user.first_name}\n"
+        f"🔗 **Username:** {username}\n"
+        f"🆔 **User ID:** `{user.id}`\n"
+        f"📦 **Item ID:** `{item_id}`\n"
+        f"🔥 **Item Details:** {item_desc}\n"
         f"🎟️ **Redeem Code:** `{redeem_code}`\n\n"
         f"👉 To deliver this ID, send command:\n"
         f"`/deliverff {user.id} {item_id}`"
@@ -213,6 +250,8 @@ def deliver_ff(message):
     bot.reply_to(message, "✅ ID successfully delivered to the user!")
 
 if __name__ == '__main__':
+    keep_alive()
     bot.remove_webhook()
     bot.infinity_polling(skip_pending=True)
+
     
