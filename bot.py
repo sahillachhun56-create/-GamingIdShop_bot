@@ -5,7 +5,7 @@ from flask import Flask
 from threading import Thread
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-API_TOKEN = '8497566219:AAGlLbNMnmYG91Inzse3S5zFp65LZyjPjfM'  # अपना बॉट टोकन यहाँ डालें
+API_TOKEN = '8497566219:AAHlKbzCFd7cOMM-TNgsM08baJhRZtM8jRc'  # अपना बॉट टोकन यहाँ डालें
 bot = telebot.TeleBot(API_TOKEN)
 ADMIN_ID = 8380823727
 
@@ -83,7 +83,7 @@ def callbacks(call):
         conn.close()
         
         if not items:
-            bot.answer_callback_query(call.id, "⚠️️ Sorry, no IDs are currently available in stock!", show_alert=True)
+            bot.answer_callback_query(call.id, "⚠️ Sorry, no IDs are currently available in stock!", show_alert=True)
             return
             
         markup = InlineKeyboardMarkup(row_width=1)
@@ -202,18 +202,19 @@ def handle_text_messages(message):
         
     username = f"@{user.username}" if user.username else "No Username"
     
+    # एडमिन मैसेज को प्लेन टेक्स्ट में रखा गया है ताकि पार्सिंग एरर न आए
     admin_msg = (
-        f"🔔 **NEW PAYMENT RECEIVED!**\n"
+        f"🔔 NEW PAYMENT RECEIVED!\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"👤 **Buyer:** {user.first_name}\n"
-        f"🔗 **Username:** {username}\n"
-        f"🆔 **User ID:** `{user.id}`\n"
-        f"📦 **Item Details:** {item_desc}\n"
-        f"🎟️ **Redeem Code:** `{redeem_code}`\n\n"
+        f"👤 Buyer: {user.first_name}\n"
+        f"🔗 Username: {username}\n"
+        f"🆔 User ID: {user.id}\n"
+        f"📦 Item Details: {item_desc}\n"
+        f"🎟️ Redeem Code: {redeem_code}\n\n"
         f"👉 To deliver this ID, send command:\n"
-        f"`/deliverff {user.id} {item_id}`"
+        f"/deliverff {user.id} {item_id}"
     )
-    bot.send_message(ADMIN_ID, admin_msg, parse_mode='Markdown')
+    bot.send_message(ADMIN_ID, admin_msg)
     bot.reply_to(message, "✅ Your redeem code has been successfully sent to the admin! You will receive the ID after verification.")
 
 @bot.message_handler(commands=['addff'])
@@ -274,6 +275,7 @@ if __name__ == '__main__':
     keep_alive()
     bot.remove_webhook()
     bot.infinity_polling(skip_pending=True)
+    
     
         
     
