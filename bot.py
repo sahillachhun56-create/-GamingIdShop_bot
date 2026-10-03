@@ -1,13 +1,30 @@
 import telebot
-import sqlite3
+import json
 import os
 from flask import Flask
 from threading import Thread
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-API_TOKEN = '8497566219:AAHlKbzCFd7cOMM-TNgsM08baJhRZtM8jRc'  # अपना बॉट टोकन यहाँ डालें
+API_TOKEN = "8497566219:AAHlKbzCFd7cOMM-TNgsM08baJhRZtM8jRc"  # अपना बॉट टोकन यहाँ डालें
 bot = telebot.TeleBot(API_TOKEN)
 ADMIN_ID = 8380823727
+
+DATA_FILE = 'ff_stock.json'
+PENDING_FILE = 'pending_orders.json'
+
+# डेटा लोड और सेव करने के लिए आसान फंक्शन्स (ताकि डेटा उड़े नहीं)
+def load_data(filename):
+    if os.path.exists(filename):
+        with open(filename, 'r', encoding='utf-8') as f:
+            try:
+                return json.load(f)
+            except:
+                return {}
+    return {}
+
+def save_data(filename, data):
+    with open(filename, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
 # Render के लिए Flask सर्वर
 app = Flask('')
@@ -23,37 +40,13 @@ def keep_alive():
     t = Thread(target=run)
     t.start()
 
-def init_db():
-    conn = sqlite3.connect('ff_id_store.db', check_same_thread=False)
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS stock (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            level TEXT,
-            bundles TEXT,
-            price REAL,
-            status TEXT DEFAULT 'Available'
-        )
-    ''')
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS pending_orders (
-            user_id INTEGER PRIMARY KEY,
-            item_id INTEGER
-        )
-    ''')
-    conn.commit()
-    conn.close()
-
-init_db()
-
 @bot.message_handler(commands=['start', 'menu'])
 def menu(message):
     user_id = message.from_user.id
-    conn = sqlite3.connect('ff_id_store.db', check_same_thread=False)
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM pending_orders WHERE user_id=?", (user_id,))
-    conn.commit()
-    conn.close()
+    pending = load_data(PENDING_FILE)
+    if str(user_id) in pending:
+        del pending[str(user_id)]
+        save_data(PENDING_FILE, pending)
 
     markup = InlineKeyboardMarkup(row_width=1)
     markup.add(
@@ -64,97 +57,83 @@ def menu(message):
         markup.add(InlineKeyboardButton("⚙️ Admin Panel (Add ID)", callback_data="admin_panel"))
 
     text = (
-        "⚡ **OFFICIAL GAMING ID STORE** ⚡\n"
+        "⚡ OFFICIAL GAMING ID STORE ⚡\n"
         "━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "🎯 *Trusted & 100% Secure Free Fire Max IDs Marketplace!*\n\n"
-        "💳 **Payment Mode:** Google Play Redeem Code\n"
-        "👇 **Select an option below to get started:**"
+        "🎯 Trusted & 100% Secure Free Fire Max IDs Marketplace!\n\n"
+        "💳 Payment Mode: Google Play Redeem Code\n"
+        "👇 Select an option below to get started:"
     )
-    bot.send_message(message.chat.id, text, parse_mode='Markdown', reply_markup=markup)
+    bot.send_message(message.chat.id, text, reply_markup=markup)
 
 @bot.callback_query_handler(func=lambda call: True)
 def callbacks(call):
     user = call.from_user
+    stock = load_data(DATA_FILE)
+    
     if call.data == "buy_ff":
-        conn = sqlite3.connect('ff_id_store.db', check_same_thread=False)
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, level, bundles, price FROM stock WHERE status='Available'")
-        items = cursor.fetchall()
-        conn.close()
+        available_items = {k: v for k, v in stock.items() if v['status'] == 'Available'}
         
-        if not items:
+        if not available_items:
             bot.answer_callback_query(call.id, "⚠️ Sorry, no IDs are currently available in stock!", show_alert=True)
             return
             
         markup = InlineKeyboardMarkup(row_width=1)
-        for item in items:
-            item_id, level, bundles, price = item
-            markup.add(InlineKeyboardButton(f"🆔 Level {level} | 📦 {bundles} | 💰 ₹{price}", callback_data=f"buy_{item_id}"))
+        for item_id, data in available_items.items():
+            markup.add(InlineKeyboardButton(f"🆔 Level {data['level']} | 📦 {data['bundles']} | 💰 ₹{data['price']}", callback_data=f"buy_{item_id}"))
         markup.add(InlineKeyboardButton("« Main Menu", callback_data="main_menu"))
         
         bot.edit_message_text(
-            "💎 **AVAILABLE FREE FIRE MAX IDS**\n\n"
+            "💎 AVAILABLE FREE FIRE MAX IDS\n\n"
             "Click on any ID below to purchase:",
             chat_id=call.message.chat.id,
             message_id=call.message.message_id,
-            parse_mode='Markdown',
             reply_markup=markup
         )
         
     elif call.data.startswith("buy_"):
         item_id = call.data.replace("buy_", "")
-        conn = sqlite3.connect('ff_id_store.db', check_same_thread=False)
-        cursor = conn.cursor()
-        cursor.execute("SELECT level, bundles, price FROM stock WHERE id=? AND status='Available'", (item_id,))
-        item = cursor.fetchone()
-        conn.close()
-        
-        if not item:
+        if item_id not in stock or stock[item_id]['status'] != 'Available':
             bot.answer_callback_query(call.id, "❌ This ID has already been sold!", show_alert=True)
             return
             
-        level, bundles, price = item
-        
-        conn = sqlite3.connect('ff_id_store.db', check_same_thread=False)
-        cursor = conn.cursor()
-        cursor.execute("REPLACE INTO pending_orders (user_id, item_id) VALUES (?, ?)", (user.id, item_id))
-        conn.commit()
-        conn.close()
+        item = stock[item_id]
+        pending = load_data(PENDING_FILE)
+        pending[str(user.id)] = item_id
+        save_data(PENDING_FILE, pending)
         
         pay_text = (
-            f"🛒 **ID BOOKING DETAILS**\n"
+            f"🛒 ID BOOKING DETAILS\n"
             f"━━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"🔥 **Level:** {level}\n"
-            f"📦 **Collection:** {bundles}\n"
-            f"💵 **Price:** ₹{price}\n\n"
-            f"📌 **How to Purchase:**\n"
-            f"1️⃣ Purchase a **Google Play Redeem Code** worth ₹{price}.\n"
-            f"2️⃣ **Now type and send your Google Play Redeem Code here in chat!**\n\n"
-            f"💡 **Example Format:**\n"
-            f"`ABCD1234EFGH5678`"
+            f"🔥 Level: {item['level']}\n"
+            f"📦 Collection: {item['bundles']}\n"
+            f"💵 Price: ₹{item['price']}\n\n"
+            f"📌 How to Purchase:\n"
+            f"1️⃣ Purchase a Google Play Redeem Code worth ₹{item['price']}.\n"
+            f"2️⃣ Now type and send your Google Play Redeem Code here in chat!\n\n"
+            f"💡 Example Format:\n"
+            f"ABCD1234EFGH5678"
         )
         markup = InlineKeyboardMarkup()
         markup.add(InlineKeyboardButton("« Back", callback_data="buy_ff"))
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=pay_text, parse_mode='Markdown', reply_markup=markup)
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=pay_text, reply_markup=markup)
 
     elif call.data == "admin_panel":
         if user.id != ADMIN_ID:
             return
         admin_text = (
-            "⚙️ **ADMIN PANEL**\n"
+            "⚙️ ADMIN PANEL\n"
             "Use the following format to add a new ID:\n"
-            "`/addff [Level] | [Bundles] | [Price]`\n\n"
-            "**Example:**\n"
-            "`/addff 63 | UID 1772894853 | 1500`"
+            "/addff [Level] | [Bundles] | [Price]\n\n"
+            "Example:\n"
+            "/addff 63 | UID 1772894853 | 1500"
         )
-        bot.send_message(call.message.chat.id, admin_text, parse_mode='Markdown')
+        bot.send_message(call.message.chat.id, admin_text)
 
     elif call.data == "main_menu":
-        conn = sqlite3.connect('ff_id_store.db', check_same_thread=False)
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM pending_orders WHERE user_id=?", (user.id,))
-        conn.commit()
-        conn.close()
+        pending = load_data(PENDING_FILE)
+        if str(user.id) in pending:
+            del pending[str(user.id)]
+            save_data(PENDING_FILE, pending)
 
         markup = InlineKeyboardMarkup(row_width=1)
         markup.add(
@@ -163,11 +142,11 @@ def callbacks(call):
         )
         if user.id == ADMIN_ID:
             markup.add(InlineKeyboardButton("⚙️ Admin Panel (Add ID)", callback_data="admin_panel"))
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="⚡ **OFFICIAL GAMING ID STORE** ⚡", parse_mode='Markdown', reply_markup=markup)
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="⚡ OFFICIAL GAMING ID STORE ⚡", reply_markup=markup)
 
     elif call.data == "support":
         bot.answer_callback_query(call.id)
-        bot.send_message(call.message.chat.id, "💬 For support, contact: @Momshad_00")
+        bot.send_message(call.message.chat.id, "💬 For support, contact: @Rahul_170_0")
 
 @bot.message_handler(func=lambda message: not message.text.startswith('/'))
 def handle_text_messages(message):
@@ -175,34 +154,27 @@ def handle_text_messages(message):
     if user.id == ADMIN_ID:
         return  
         
-    conn = sqlite3.connect('ff_id_store.db', check_same_thread=False)
-    cursor = conn.cursor()
-    cursor.execute("SELECT item_id FROM pending_orders WHERE user_id=?", (user.id,))
-    pending = cursor.fetchone()
-    
-    if not pending:
+    pending = load_data(PENDING_FILE)
+    if str(user.id) not in pending:
         bot.reply_to(message, "⚠️ Please select an ID first from the menu by typing /menu or /start.")
         return  
         
-    item_id = pending[0]
+    item_id = pending[str(user.id)]
     redeem_code = message.text.strip()
     
-    cursor.execute("SELECT level, bundles, price FROM stock WHERE id=?", (item_id,))
-    item = cursor.fetchone()
+    stock = load_data(DATA_FILE)
+    item = stock.get(item_id)
     
-    cursor.execute("DELETE FROM pending_orders WHERE user_id=?", (user.id,))
-    conn.commit()
-    conn.close()
+    del pending[str(user.id)]
+    save_data(PENDING_FILE, pending)
     
     if item:
-        level, bundles, price = item
-        item_desc = f"Level {level} | {bundles} | ₹{price}"
+        item_desc = f"Level {item['level']} | {item['bundles']} | ₹{item['price']}"
     else:
         item_desc = "Unknown Item"
         
     username = f"@{user.username}" if user.username else "No Username"
     
-    # एडमिन मैसेज को प्लेन टेक्स्ट में रखा गया है ताकि पार्सिंग एरर न आए
     admin_msg = (
         f"🔔 NEW PAYMENT RECEIVED!\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━\n"
@@ -226,15 +198,23 @@ def add_ff(message):
         parts = content.split('|')
         level, bundles, price = parts[0].strip(), parts[1].strip(), float(parts[2].strip())
         
-        conn = sqlite3.connect('ff_id_store.db', check_same_thread=False)
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO stock (level, bundles, price, status) VALUES (?, ?, ?, 'Available')", (level, bundles, price))
-        conn.commit()
-        conn.close()
+        stock = load_data(DATA_FILE)
+        item_id = str(len(stock) + 1)
+        # अगर आईडी पहले से मौजूद है तो नया यूनिक आईडी बनाएँ
+        while item_id in stock:
+            item_id = str(int(item_id) + 1)
+            
+        stock[item_id] = {
+            "level": level,
+            "bundles": bundles,
+            "price": price,
+            "status": "Available"
+        }
+        save_data(DATA_FILE, stock)
         
         bot.reply_to(message, f"✅ ID successfully added!\n🔥 Level: {level}\n💰 Price: ₹{price}")
     except Exception as e:
-        bot.reply_to(message, "❌ Invalid format! Use this format:\n`/addff 63 | UID 1772894853 | 1500`", parse_mode='Markdown')
+        bot.reply_to(message, "❌ Invalid format! Use this format:\n/addff 63 | UID 1772894853 | 1500")
 
 @bot.message_handler(commands=['deliverff'])
 def deliver_ff(message):
@@ -242,32 +222,26 @@ def deliver_ff(message):
         return
     args = message.text.split()
     if len(args) < 3:
-        bot.reply_to(message, "❌ Correct format: `/deliverff [User_ID] [Item_ID]`", parse_mode='Markdown')
+        bot.reply_to(message, "❌ Correct format: /deliverff [User_ID] [Item_ID]")
         return
         
     buyer_id, item_id = int(args[1]), args[2]
-    conn = sqlite3.connect('ff_id_store.db', check_same_thread=False)
-    cursor = conn.cursor()
-    cursor.execute("SELECT level, bundles FROM stock WHERE id=? AND status='Available'", (item_id,))
-    item = cursor.fetchone()
+    stock = load_data(DATA_FILE)
     
-    if not item:
-        conn.close()
+    if item_id not in stock or stock[item_id]['status'] != 'Available':
         bot.reply_to(message, "❌ This ID is either sold or invalid!")
         return
         
-    level, bundles = item
-    cursor.execute("UPDATE stock SET status='Sold' WHERE id=?", (item_id,))
-    conn.commit()
-    conn.close()
+    stock[item_id]['status'] = 'Sold'
+    save_data(DATA_FILE, stock)
     
+    item = stock[item_id]
     bot.send_message(
         buyer_id, 
-        f"🎉 **CONGRATULATIONS! Deal Successful.**\n"
+        f"🎉 CONGRATULATIONS! Deal Successful.\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"🔥 **Level:** {level}\n"
-        f"📦 **ID & Password Details:**\n`{bundles}`", 
-        parse_mode='Markdown'
+        f"🔥 Level: {item['level']}\n"
+        f"📦 ID & Password Details:\n{item['bundles']}"
     )
     bot.reply_to(message, "✅ ID successfully delivered to the user!")
 
@@ -275,6 +249,7 @@ if __name__ == '__main__':
     keep_alive()
     bot.remove_webhook()
     bot.infinity_polling(skip_pending=True)
+                           
     
     
         
