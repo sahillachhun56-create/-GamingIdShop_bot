@@ -242,7 +242,7 @@ def deliver_ff(message):
     stock[item_id]['status'] = 'Sold'
     save_data(DATA_FILE, stock)
 
-        item = stock[item_id]
+    item = stock[item_id]
     
     # यह लाइनें जोड़नी हैं ताकि पासवर्ड या डिटेल्स सही से उठकर आ जाए
     item_details = item.get('password', item.get('details', item.get('pass', item.get('bundles', 'Not Available'))))
@@ -254,7 +254,6 @@ def deliver_ff(message):
         f"🔥 Level: {item.get('level', 'N/A')}\n"
         f"📦 ID & Password Details:\n{item_details}"
         )
-
     
     bot.reply_to(message, "✅ ID successfully delivered to the user!")
     
