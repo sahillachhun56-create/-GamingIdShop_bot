@@ -220,30 +220,40 @@ def add_ff(message):
 def deliver_ff(message):
     if message.from_user.id != ADMIN_ID:
         return
+    
     args = message.text.split()
     if len(args) < 3:
         bot.reply_to(message, "❌ Correct format: /deliverff [User_ID] [Item_ID]")
         return
-        
-    buyer_id, item_id = int(args[1]), args[2]
+
+    try:
+        buyer_id = int(args[1])
+        item_id = str(args[2])
+    except ValueError:
+        bot.reply_to(message, "❌ Invalid User_ID or Item_ID format!")
+        return
+
     stock = load_data(DATA_FILE)
-    
+
     if item_id not in stock or stock[item_id]['status'] != 'Available':
         bot.reply_to(message, "❌ This ID is either sold or invalid!")
         return
-        
+
     stock[item_id]['status'] = 'Sold'
     save_data(DATA_FILE, stock)
-    
+
     item = stock[item_id]
+    
     bot.send_message(
-        buyer_id, 
+        buyer_id,
         f"🎉 CONGRATULATIONS! Deal Successful.\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"🔥 Level: {item['level']}\n"
-        f"📦 ID & Password Details:\n{item['bundles']}"
+        f"—————————————————\n"
+        f"🔥 Level: {item.get('level', 'N/A')}\n"
+        f"📦 ID & Password Details:\n{item.get('bundles', item.get('details', 'N/A'))}"
     )
+    
     bot.reply_to(message, "✅ ID successfully delivered to the user!")
+    
 
 if __name__ == '__main__':
     keep_alive()
