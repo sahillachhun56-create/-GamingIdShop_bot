@@ -5,7 +5,7 @@ from flask import Flask
 from threading import Thread
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-API_TOKEN = "8497566219:AAGiHvTQ9IvvXuxdvbd3P9g1R7vpqtgz_eE"  # Put your bot token here
+API_TOKEN = "8497566219:AAE5CDisuQFee1g7pYlAiug1mKo7ERzeKjo"  # Put your bot token here
 bot = telebot.TeleBot(API_TOKEN)
 ADMIN_ID = 8380823727
 
@@ -40,21 +40,21 @@ def keep_alive():
     t = Thread(target=run)
     t.start()
 
-# Main Dashboard Menu Layout
+# Main Dashboard Menu Layout with Colorful Design
 def get_main_menu_markup(user_id):
     markup = InlineKeyboardMarkup(row_width=2)
     markup.add(
-        InlineKeyboardButton("🔥 Buy Free Fire IDs", callback_data="buy_ff"),
-        InlineKeyboardButton("💳 Add Balance", callback_data="add_balance_menu"),
+        InlineKeyboardButton("🛒 Buy Free Fire IDs", callback_data="buy_ff"),
+        InlineKeyboardButton("💎 Add Balance", callback_data="add_balance_menu"),
     )
     markup.add(
         InlineKeyboardButton("📦 My Orders", callback_data="my_orders"),
         InlineKeyboardButton("👤 My Profile", callback_data="my_profile"),
     )
-    markup.add(InlineKeyboardButton("💬 Customer Support", callback_data="support"))
+    markup.add(InlineKeyboardButton("🎧 Customer Support", callback_data="support"))
     
     if user_id == ADMIN_ID:
-        markup.add(InlineKeyboardButton("⚙️ Admin Panel (Add ID)", callback_data="admin_panel"))
+        markup.add(InlineKeyboardButton("⚙️ Admin Control Panel", callback_data="admin_panel"))
     return markup
 
 @bot.message_handler(commands=['start'])
@@ -62,7 +62,6 @@ def menu(message):
     user = message.from_user
     user_id_str = str(user.id)
     
-    # Clear pending order if any on /start
     pending = load_data(PENDING_FILE)
     if user_id_str in pending:
         del pending[user_id_str]
@@ -77,15 +76,17 @@ def menu(message):
     markup = get_main_menu_markup(user.id)
 
     text = (
-        "⚡ **OFFICIAL GAMING ID STORE** ⚡\n"
-        "━━━━━━━━━━━━━━━━━━━━━━\n"
+        "╔══════════════════════╗\n"
+        "   ⚡ **OFFICIAL GAMING ID STORE** ⚡\n"
+        "╚══════════════════════╝\n\n"
         f"👋 Welcome, **{user.first_name}**!\n\n"
-        "💎 Premium Free Fire IDs, instant delivery & secure store.\n\n"
-        "✨ Trusted Seller & Instant Service\n"
-        "🛡️ 100% Secure Transactions\n"
-        f"💰 **Wallet Balance:** ₹{balance}\n"
-        "━━━━━━━━━━━━━━━━━━━━━━\n"
-        "👇 *Select an option from below:*"
+        "🌟 *Get premium Free Fire max IDs with instant verification & secure delivery.*\n\n"
+        "🔹 🚀 Lightning Fast Service\n"
+        "🔹 🛡️ 100% Secure & Trusted\n"
+        f"🔹 💰 **Wallet Balance:** `₹{balance}`\n\n"
+        "╔══════════════════════╗\n"
+        "     👇 **CHOOSE AN OPTION BELOW** 👇\n"
+        "╚══════════════════════╝"
     )
     bot.send_message(message.chat.id, text, reply_markup=markup, parse_mode="Markdown")
 
@@ -104,13 +105,14 @@ def callbacks(call):
         orders_count = len(users_data[user_id_str]["orders"])
         
         text = (
-            f"👤 **USER PROFILE INFO**\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            "╔══════════════════════╗\n"
+            "         👤 **USER PROFILE INFO**\n"
+            "╚══════════════════════╝\n\n"
             f"🆔 Telegram ID: `{user.id}`\n"
             f"👤 Name: {user.first_name}\n"
-            f"💰 Wallet Balance: ₹{balance}\n"
-            f"📦 Total Completed Orders: {orders_count}\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━"
+            f"💰 Wallet Balance: `₹{balance}`\n"
+            f"📦 Total Orders: `{orders_count}`\n\n"
+            "✨ *Thank you for being our valuable customer!*"
         )
         markup = InlineKeyboardMarkup()
         markup.add(InlineKeyboardButton("« Back to Main Menu", callback_data="main_menu"))
@@ -118,10 +120,11 @@ def callbacks(call):
 
     elif call.data == "add_balance_menu":
         text = (
-            "💳 **ADD BALANCE TO WALLET**\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "To add balance or for any redeem code queries, contact the owner directly:\n\n"
-            "👉 Support: @Rahul_170_0"
+            "╔══════════════════════╗\n"
+            "       💳 **ADD BALANCE / REDEEM**\n"
+            "╚══════════════════════╝\n\n"
+            "💡 To add funds to your wallet or for any redeem code queries, reach out directly to the owner:\n\n"
+            "👉 Support Handle: **@Rahul_170_0**"
         )
         markup = InlineKeyboardMarkup()
         markup.add(InlineKeyboardButton("« Back to Main Menu", callback_data="main_menu"))
@@ -130,11 +133,20 @@ def callbacks(call):
     elif call.data == "my_orders":
         orders = users_data[user_id_str]["orders"]
         if not orders:
-            text = "📦 **MY ORDERS**\n━━━━━━━━━━━━━━━━━━━━━━\nYou haven't placed any orders yet."
+            text = (
+                "╔══════════════════════╗\n"
+                "           📦 **MY ORDERS**\n"
+                "╚══════════════════════╝\n\n"
+                "❌ You haven't purchased any items yet."
+            )
         else:
-            text = "📦 **YOUR RECENT ORDERS**\n━━━━━━━━━━━━━━━━━━━━━━\n"
+            text = (
+                "╔══════════════════════╗\n"
+                "       📦 **YOUR COMPLETED ORDERS**\n"
+                "╚══════════════════════╝\n\n"
+            )
             for idx, order in enumerate(orders, 1):
-                text += f"{idx}. {order}\n"
+                text += f"🔸 {idx}. {order}\n"
 
         markup = InlineKeyboardMarkup()
         markup.add(InlineKeyboardButton("« Back to Main Menu", callback_data="main_menu"))
@@ -149,10 +161,10 @@ def callbacks(call):
 
         markup = InlineKeyboardMarkup(row_width=1)
         for item_id, data in available_items.items():
-            markup.add(InlineKeyboardButton(f"🔥 Level {data['level']} | UID {data['bundles']} | 💰 ₹{data['price']}", callback_data=f"buy_{item_id}"))
+            markup.add(InlineKeyboardButton(f"🔥 Lvl {data['level']} | UID {data['bundles']} | 💰 ₹{data['price']}", callback_data=f"buy_{item_id}"))
         markup.add(InlineKeyboardButton("« Back to Main Menu", callback_data="main_menu"))
         
-        bot.edit_message_text("💎 **AVAILABLE FREE FIRE MAX IDS**\n\nClick on any ID below to purchase:", chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup, parse_mode="Markdown")
+        bot.edit_message_text("💎 **AVAILABLE FREE FIRE MAX IDS**\n\n✨ Click on any item below to proceed with your purchase:", chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup, parse_mode="Markdown")
 
     elif call.data.startswith("buy_"):
         item_id = call.data.replace("buy_", "")
@@ -168,16 +180,17 @@ def callbacks(call):
         save_data(PENDING_FILE, pending)
 
         pay_text = (
-            f"🛒 **ID BOOKING DETAILS**\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"🔥 Level: {item['level']}\n"
-            f"📦 Collection/UID: {item['bundles']}\n"
-            f"💵 Price: ₹{item['price']}\n\n"
-            f"📌 **How to Purchase:**\n"
-            f"1️⃣ Purchase a Google Play Redeem Code worth ₹{item['price']}.\n"
-            f"2️⃣ Now type and send your Google Play Redeem Code here in chat!\n\n"
-            f"💡 *Example Format:*\n"
-            f"`ABCD1234EFGH5678`"
+            "╔══════════════════════╗\n"
+            "       🛒 **ID BOOKING DETAILS**\n"
+            "╚══════════════════════╝\n\n"
+            f"🔥 Level: `{item['level']}`\n"
+            f"📦 Collection/UID: `{item['bundles']}`\n"
+            f"💵 Price: `₹{item['price']}`\n\n"
+            "📌 **How to Complete Purchase:**\n"
+            f"1️⃣ Buy a Google Play Redeem Code worth `₹{item['price']}`.\n"
+            "2️⃣ Paste and send your Redeem Code here in the chat!\n\n"
+            "💡 *Example Format:*\n"
+            "`ABCD1234EFGH5678`"
         )
         markup = InlineKeyboardMarkup()
         markup.add(InlineKeyboardButton("« Back to Catalog", callback_data="buy_ff"))
@@ -187,12 +200,14 @@ def callbacks(call):
         if user.id != ADMIN_ID:
             return
         admin_text = (
-            "⚙️ **ADMIN CONTROL PANEL**\n\n"
-            "• **To Add ID:**\n"
+            "╔══════════════════════╗\n"
+            "     ⚙️ **ADMIN CONTROL PANEL**\n"
+            "╚══════════════════════╝\n\n"
+            "🔹 **To Add ID:**\n"
             "`/addff [Level] | [UID/Bundle] | [Price]`\n\n"
-            "• **To Add Balance:**\n"
+            "🔹 **To Add Balance:**\n"
             "`/addbalance [user_id] [amount]`\n\n"
-            "• **To Deliver ID:**\n"
+            "🔹 **To Deliver ID:**\n"
             "`/deliverff [buyer_id] [item_id]`"
         )
         markup = InlineKeyboardMarkup()
@@ -201,11 +216,12 @@ def callbacks(call):
 
     elif call.data == "support":
         text = (
-            "💬 **CUSTOMER SUPPORT**\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "For any issues or assistance, contact directly:\n\n"
-            "👤 Owner: @Rahul_170_0\n"
-            "⏰ Timing: 24/7 Available"
+            "╔══════════════════════╗\n"
+            "     🎧 **CUSTOMER SUPPORT**\n"
+            "╚══════════════════════╝\n\n"
+            "💬 Need help with purchases, payments, or delivery? Contact us directly:\n\n"
+            "👤 Owner & Support: **@Rahul_170_0**\n"
+            "⏰ Availability: 24/7 Active"
         )
         markup = InlineKeyboardMarkup()
         markup.add(InlineKeyboardButton("« Back to Main Menu", callback_data="main_menu"))
@@ -220,12 +236,14 @@ def callbacks(call):
         balance = users_data[user_id_str]["balance"]
         markup = get_main_menu_markup(user.id)
         text = (
-            "⚡ **OFFICIAL GAMING ID STORE** ⚡\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"👋 Welcome, **{user.first_name}**!\n\n"
-            f"💰 **Wallet Balance:** ₹{balance}\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "👇 *Select an option from below:*"
+            "╔══════════════════════╗\n"
+            "   ⚡ **OFFICIAL GAMING ID STORE** ⚡\n"
+            "╚══════════════════════╝\n\n"
+            f"👋 Welcome back, **{user.first_name}**!\n\n"
+            f"🔹 💰 **Wallet Balance:** `₹{balance}`\n\n"
+            "╔══════════════════════╗\n"
+            "     👇 **CHOOSE AN OPTION BELOW** 👇\n"
+            "╚══════════════════════╝"
         )
         bot.edit_message_text(text, chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup, parse_mode="Markdown")
 
@@ -256,16 +274,16 @@ def handle_text_messages(message):
 
     username = f"@{user.username}" if user.username else "No Username"
 
-    # Send full buyer details to admin
     admin_msg = (
-        f"🔔 **NEW REDEEM CODE SUBMITTED!**\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━\n"
+        "╔══════════════════════╗\n"
+        "   🔔 **NEW REDEEM CODE RECEIVED!**\n"
+        "╚══════════════════════╝\n\n"
         f"👤 Buyer Name: {user.first_name}\n"
         f"🔗 Username: {username}\n"
         f"🆔 User ID: `{user.id}`\n"
         f"📦 Item Details: {item_desc}\n"
         f"🎟️ Redeem Code: `{redeem_code}`\n\n"
-        f"👉 Click the command below to deliver the ID:\n"
+        "👉 Click the command below to deliver the ID:\n"
         f"`/deliverff {user.id} {item_id}`"
     )
     bot.send_message(ADMIN_ID, admin_msg, parse_mode="Markdown")
@@ -361,12 +379,13 @@ def deliver_ff(message):
     try:
         bot.send_message(
             buyer_id,
-            f"🎉 **CONGRATULATIONS! Deal Successful**\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"🔥 Level: {item['level']}\n"
-            f"📦 UID & Details: {item['bundles']}\n"
-            f"💵 Price: ₹{item['price']}\n\n"
-            f"✨ Thank you for purchasing from our store!"
+            "╔══════════════════════╗\n"
+            "   🎉 **DEAL SUCCESSFUL!** 🎉\n"
+            "╚══════════════════════╝\n\n"
+            f"🔥 Level: `{item['level']}`\n"
+            f"📦 UID & Details: `{item['bundles']}`\n"
+            f"💵 Price: `₹{item['price']}`\n\n"
+            "✨ *Thank you for purchasing from our store! Enjoy your game!*"
         )
     except Exception as e:
         pass
@@ -379,10 +398,9 @@ if __name__ == '__main__':
     bot.infinity_polling(skip_pending=True)
     
     
+    
                            
     
     
         
-    
-
     
