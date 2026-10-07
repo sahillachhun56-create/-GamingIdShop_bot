@@ -5,7 +5,7 @@ from flask import Flask
 from threading import Thread
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-API_TOKEN = "8497566219:AAEpky5XxMTSU5E3vyqP6yuBmZrxmEJW9-g"  # Put your bot token here
+API_TOKEN = "8497566219:AAESbnDMCu_cIU5JCjfWRHJ55d7PeQUMeW4"  # Put your bot token here
 bot = telebot.TeleBot(API_TOKEN)
 ADMIN_ID = 8380823727
 
@@ -40,7 +40,7 @@ def keep_alive():
     t = Thread(target=run)
     t.start()
 
-# Premium Ultra-Modern UI Menu Layout
+# Compact & Clean Menu Layout
 def get_main_menu_markup(user_id):
     markup = InlineKeyboardMarkup(row_width=2)
     markup.add(
@@ -54,7 +54,7 @@ def get_main_menu_markup(user_id):
     markup.add(InlineKeyboardButton("🛡️ Direct Support", callback_data="support"))
     
     if user_id == ADMIN_ID:
-        markup.add(InlineKeyboardButton("🔐 Admin Control Panel", callback_data="admin_panel"))
+        markup.add(InlineKeyboardButton("🔐 Admin Panel", callback_data="admin_panel"))
     return markup
 
 @bot.message_handler(commands=['start'])
@@ -76,18 +76,10 @@ def menu(message):
     markup = get_main_menu_markup(user.id)
 
     text = (
-        "┏━━ 🌟 **GAMING VAULT STORE** 🌟 ━━┓\n"
-        "┃  *The Ultimate Trading Hub*        ┃\n"
-        "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-        f"✦ **Operator:** `{user.first_name}`\n"
-        f"✦ **Status:** `ONLINE` 🟢\n"
-        f"✦ **Wallet Funds:** `₹{balance}`\n\n"
-        "╭━━━ 🚀 **SYSTEM FEATURES** ━━━╮\n"
-        "┃ 🔹 Instant Key Auto-Delivery\n"
-        "┃ 🔹 Verified & Secure Stock\n"
-        "┃ 🔹 24/7 Priority Support\n"
-        "╰━━━━━━━━━━━━━━━━━━━━━━━━━━╯\n\n"
-        "👇 *Select an operational mode below:*"
+        "🔥 **GAMING VAULT STORE** 🔥\n"
+        f"👤 **User:** `{user.first_name}` | 💰 **Balance:** `₹{balance}`\n\n"
+        "✨ Fast Delivery & 100% Secure Trading Hub.\n"
+        "👇 *Select an option below:*"
     )
     bot.send_message(message.chat.id, text, reply_markup=markup, parse_mode="Markdown")
 
@@ -106,65 +98,58 @@ def callbacks(call):
         orders_count = len(users_data[user_id_str]["orders"])
         
         text = (
-            "┏━━ 👤 **OPERATOR PROFILE** ━━┓\n\n"
-            f"🔹 **Telegram ID:** `{user.id}`\n"
-            f"🔹 **Username:** @{user.username if user.username else 'None'}\n"
-            f"🔹 **Account Balance:** `₹{balance}`\n"
-            f"🔹 **Total Acquisitions:** `{orders_count}`\n\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
+            "👤 **OPERATOR PROFILE**\n"
+            f"• **Telegram ID:** `{user.id}`\n"
+            f"• **Username:** @{user.username if user.username else 'None'}\n"
+            f"• **Balance:** `₹{balance}`\n"
+            f"• **Total Orders:** `{orders_count}`"
         )
         markup = InlineKeyboardMarkup()
-        markup.add(InlineKeyboardButton("« Return to Main Deck", callback_data="main_menu"))
+        markup.add(InlineKeyboardButton("« Back to Menu", callback_data="main_menu"))
         bot.edit_message_text(text, chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup, parse_mode="Markdown")
 
     elif call.data == "add_balance_menu":
         text = (
-            "┏━━ 💎 **FUNDS & TOP-UP** ━━┓\n\n"
-            "✦ Want to add balance or submit a Google Play Redeem code? Connect securely with the core administrator:\n\n"
-            "💬 **Support Channel:** `@Rahul_170_0`\n\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
+            "💎 **ADD BALANCE / TOP-UP**\n"
+            "To add funds or submit Google Play Redeem codes, contact the owner directly:\n\n"
+            "💬 **Support:** `@Rahul_170_0`"
         )
         markup = InlineKeyboardMarkup()
-        markup.add(InlineKeyboardButton("« Return to Main Deck", callback_data="main_menu"))
+        markup.add(InlineKeyboardButton("« Back to Menu", callback_data="main_menu"))
         bot.edit_message_text(text, chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup, parse_mode="Markdown")
 
     elif call.data == "my_orders":
         orders = users_data[user_id_str]["orders"]
         if not orders:
-            text = (
-                "┏━━ 📦 **ACQUISITION HISTORY** ━━┓\n\n"
-                "⚠️ *No past records found in your archive.*\n\n"
-                "┗━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
-            )
+            text = "📦 **MY ORDERS**\n\n❌ No purchase history found."
         else:
-            text = "┏━━ 📦 **YOUR VAULT RECORDS** ━━┓\n\n"
+            text = "📦 **YOUR ORDERS HISTORY**\n\n"
             for idx, order in enumerate(orders, 1):
-                text += f"🔸 `[#{idx}]` {order}\n"
-            text += "\n┗━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
+                text += f"{idx}. {order}\n"
 
         markup = InlineKeyboardMarkup()
-        markup.add(InlineKeyboardButton("« Return to Main Deck", callback_data="main_menu"))
+        markup.add(InlineKeyboardButton("« Back to Menu", callback_data="main_menu"))
         bot.edit_message_text(text, chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup, parse_mode="Markdown")
 
     elif call.data == "buy_ff":
         stock = load_data(DATA_FILE)
         available_items = {k: v for k, v in stock.items() if v.get('status') == 'Available'}
         if not available_items:
-            bot.answer_callback_query(call.id, "⚠️ Zero inventory detected! Check back later.", show_alert=True)
+            bot.answer_callback_query(call.id, "⚠️ No IDs available right now!", show_alert=True)
             return
 
         markup = InlineKeyboardMarkup(row_width=1)
         for item_id, data in available_items.items():
-            markup.add(InlineKeyboardButton(f"⚡ Level {data['level']} | 🎯 UID {data['bundles']} | 💰 ₹{data['price']}", callback_data=f"buy_{item_id}"))
-        markup.add(InlineKeyboardButton("« Return to Main Deck", callback_data="main_menu"))
+            markup.add(InlineKeyboardButton(f"⚡ Lvl {data['level']} | UID {data['bundles']} | ₹{data['price']}", callback_data=f"buy_{item_id}"))
+        markup.add(InlineKeyboardButton("« Back to Menu", callback_data="main_menu"))
         
-        bot.edit_message_text("┏━━ 🛒 **LIVE INVENTORY CATALOG** ━━┓\n\n✨ Tap an item below to inspect and initiate secure checkout:\n\n┗━━━━━━━━━━━━━━━━━━━━━━━━━━┛", chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup, parse_mode="Markdown")
+        bot.edit_message_text("🛒 **AVAILABLE FREE FIRE IDS**\n\nSelect an ID below to buy:", chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup, parse_mode="Markdown")
 
     elif call.data.startswith("buy_"):
         item_id = call.data.replace("buy_", "")
         stock = load_data(DATA_FILE)
-        if item_id not in stock or stock[item_id].get('status') != 'Available':
-            bot.answer_callback_query(call.id, "❌ Error: Item claimed or expired!", show_alert=True)
+        if item_id not in stock or stock[item_id].get('status') == 'Sold':
+            bot.answer_callback_query(call.id, "❌ Sorry, this ID is already sold!", show_alert=True)
             return
 
         item = stock[item_id]
@@ -174,16 +159,14 @@ def callbacks(call):
         save_data(PENDING_FILE, pending)
 
         pay_text = (
-            "┏━━ 🧾 **CHECKOUT PROTOCOL** ━━┓\n\n"
-            f"🔥 **Level Specs:** `{item['level']}`\n"
-            f"📦 **UID Collection:** `{item['bundles']}`\n"
-            f"💵 **Total Cost:** `₹{item['price']}`\n\n"
-            "╭━━━ ⚙️ **PAYMENT STEPS** ━━━╮\n"
-            f"┃ 1️⃣ Purchase a Google Play Redeem Code worth `₹{item['price']}`.\n"
-            "┃ 2️⃣ Type and send the raw code straight into this chat!\n"
-            "╰━━━━━━━━━━━━━━━━━━━━━━━━━━╯\n\n"
-            "💡 *Example Code Format:*\n"
-            "`ABCD1234EFGH5678`"
+            "🧾 **CHECKOUT DETAILS**\n"
+            f"• **Level:** `{item['level']}`\n"
+            f"• **UID/Details:** `{item['bundles']}`\n"
+            f"• **Price:** `₹{item['price']}`\n\n"
+            "📌 **How to Pay:**\n"
+            f"1️⃣ Buy a Google Play Redeem Code of `₹{item['price']}`.\n"
+            "2️⃣ Send the raw redeem code here in chat!\n\n"
+            "💡 *Example:* `ABCD1234EFGH5678`"
         )
         markup = InlineKeyboardMarkup()
         markup.add(InlineKeyboardButton("« Back to Catalog", callback_data="buy_ff"))
@@ -193,29 +176,24 @@ def callbacks(call):
         if user.id != ADMIN_ID:
             return
         admin_text = (
-            "┏━━ 🔐 **MASTER ADMIN DECK** ━━┓\n\n"
-            "🔹 **Inject New ID Stock:**\n"
-            "`/addff [Level] | [UID] | [Price]`\n\n"
-            "🔹 **Top-up User Wallet:**\n"
-            "`/addbalance [user_id] [amount]`\n\n"
-            "🔹 **Dispatch Order to Client:**\n"
-            "`/deliverff [buyer_id] [item_id]`\n\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
+            "🔐 **ADMIN CONTROL PANEL**\n\n"
+            "• **Add ID:**\n`/addff Level | UID | Price`\n"
+            "• **Add Balance:**\n`/addbalance user_id amount`\n"
+            "• **Deliver ID:**\n`/deliverff buyer_id item_id`"
         )
         markup = InlineKeyboardMarkup()
-        markup.add(InlineKeyboardButton("« Return to Main Deck", callback_data="main_menu"))
+        markup.add(InlineKeyboardButton("« Back to Menu", callback_data="main_menu"))
         bot.edit_message_text(admin_text, chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup, parse_mode="Markdown")
 
     elif call.data == "support":
         text = (
-            "┏━━ 🛡️ **CUSTOMER ASSISTANCE** ━━┓\n\n"
-            "✦ Facing trouble with codes, deliveries, or payments? Connect instantly with high-priority support:\n\n"
-            "👤 **Lead Administrator:** `@Rahul_170_0`\n"
-            "⏰ **Active Hours:** `24/7 Online`\n\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
+            "🛡️ **CUSTOMER SUPPORT**\n"
+            "For any assistance or issues, contact us directly:\n\n"
+            "👤 **Owner:** `@Rahul_170_0`\n"
+            "⏰ **Timing:** 24/7 Online"
         )
         markup = InlineKeyboardMarkup()
-        markup.add(InlineKeyboardButton("« Return to Main Deck", callback_data="main_menu"))
+        markup.add(InlineKeyboardButton("« Back to Menu", callback_data="main_menu"))
         bot.edit_message_text(text, chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup, parse_mode="Markdown")
 
     elif call.data == "main_menu":
@@ -227,12 +205,10 @@ def callbacks(call):
         balance = users_data[user_id_str]["balance"]
         markup = get_main_menu_markup(user.id)
         text = (
-            "┏━━ 🌟 **GAMING VAULT STORE** 🌟 ━━┓\n"
-            "┃  *The Ultimate Trading Hub*        ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-            f"✦ **Operator:** `{user.first_name}`\n"
-            f"✦ **Wallet Funds:** `₹{balance}`\n\n"
-            "👇 *Select an operational mode below:*"
+            "🔥 **GAMING VAULT STORE** 🔥\n"
+            f"👤 **User:** `{user.first_name}` | 💰 **Balance:** `₹{balance}`\n\n"
+            "✨ Fast Delivery & 100% Secure Trading Hub.\n"
+            "👇 *Select an option below:*"
         )
         bot.edit_message_text(text, chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup, parse_mode="Markdown")
 
@@ -264,30 +240,32 @@ def handle_text_messages(message):
     username = f"@{user.username}" if user.username else "No Username"
 
     admin_msg = (
-        "┏━━ 🚨 **NEW TRANSACTION ALERT** ━━┓\n\n"
-        f"👤 **Buyer Name:** {user.first_name}\n"
-        f"🔗 **Username:** {username}\n"
-        f"🆔 **User ID:** `{user.id}`\n"
-        f"📦 **Item Selected:** {item_desc}\n"
-        f"🎟️ **Redeem Code:** `{redeem_code}`\n\n"
-        "⚡ **Quick Action Command:**\n"
-        f"`/deliverff {user.id} {item_id}`\n\n"
-        "┗━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
+        "🚨 **NEW REDEEM CODE SUBMITTED!**\n"
+        f"• **Buyer:** {user.first_name} ({username})\n"
+        f"• **User ID:** `{user.id}`\n"
+        f"• **Item:** {item_desc}\n"
+        f"• **Code:** `{redeem_code}`\n\n"
+        "⚡ *Quick Deliver Command:*\n"
+        f"`/deliverff {user.id} {item_id}`"
     )
     bot.send_message(ADMIN_ID, admin_msg, parse_mode="Markdown")
-    bot.reply_to(message, "✅ **Code Transmitted!** Your redeem code has been securely routed to the admin. Verification and delivery are underway.")
+    bot.reply_to(message, "✅ Code submitted successfully! Admin will verify and deliver your ID soon.")
 
-# Admin command to add ID (/addff)
+# Admin command to add ID (/addff) with robust cleaning
 @bot.message_handler(commands=['addff'])
 def add_ff(message):
     if message.from_user.id != ADMIN_ID:
         return
     try:
-        content = message.text.replace('/addff', '').strip()
-        parts = content.split('|')
-        level = parts[0].strip()
-        bundles = parts[1].strip()
-        price = parts[2].strip()
+        content = message.text.replace('/addff', '').replace('[', '').replace(']', '').strip()
+        parts = [p.strip() for p in content.split('|')]
+        
+        if len(parts) < 3:
+            raise ValueError("Insufficient parameters")
+
+        level = parts[0]
+        bundles = parts[1]
+        price = parts[2]
 
         stock = load_data(DATA_FILE)
         item_id = str(len(stock) + 1)
@@ -301,9 +279,9 @@ def add_ff(message):
             "status": "Available"
         }
         save_data(DATA_FILE, stock)
-        bot.reply_to(message, f"✅ **Success!** ID registered with index ID: `{item_id}`", parse_mode="Markdown")
+        bot.reply_to(message, f"✅ ID added successfully! Index ID: `{item_id}`", parse_mode="Markdown")
     except Exception as e:
-        bot.reply_to(message, "❌ **Format Error!** Use layout:\n`/addff [Level] | [UID] | [Price]`", parse_mode="Markdown")
+        bot.reply_to(message, "❌ Format Error! Use:\n`/addff 63 | 1772894853 | 2000`", parse_mode="Markdown")
 
 # Admin command to add balance (/addbalance)
 @bot.message_handler(commands=['addbalance'])
@@ -311,9 +289,10 @@ def add_balance_cmd(message):
     if message.from_user.id != ADMIN_ID:
         return
     try:
-        parts = message.text.split()
-        target_id = parts[1]
-        amount = float(parts[2])
+        content = message.text.replace('/addbalance', '').replace('[', '').replace(']', '').strip()
+        parts = content.split()
+        target_id = parts[0]
+        amount = float(parts[1])
         
         users_data = load_data(USERS_FILE)
         if target_id not in users_data:
@@ -322,10 +301,10 @@ def add_balance_cmd(message):
         users_data[target_id]["balance"] += amount
         save_data(USERS_FILE, users_data)
         
-        bot.reply_to(message, f"✅ Successfully credited `₹{amount}` to user `{target_id}`.", parse_mode="Markdown")
-        bot.send_message(int(target_id), f"🎉 **Wallet Update:** Your account has been credited with `₹{amount}` by Admin!")
+        bot.reply_to(message, f"✅ Credited `₹{amount}` to user `{target_id}`.", parse_mode="Markdown")
+        bot.send_message(int(target_id), f"🎉 Your wallet has been credited with `₹{amount}` by Admin!")
     except Exception as e:
-        bot.reply_to(message, "❌ **Format Error!** Use: `/addbalance [user_id] [amount]`", parse_mode="Markdown")
+        bot.reply_to(message, "❌ Format Error! Use: `/addbalance user_id amount`", parse_mode="Markdown")
 
 # Admin command to deliver ID (/deliverff)
 @bot.message_handler(commands=['deliverff'])
@@ -333,21 +312,22 @@ def deliver_ff(message):
     if message.from_user.id != ADMIN_ID:
         return
 
-    args = message.text.split()
-    if len(args) < 3:
-        bot.reply_to(message, "❌ **Format Error!** Use: `/deliverff [buyer_id] [item_id]`", parse_mode="Markdown")
+    content = message.text.replace('/deliverff', '').replace('[', '').replace(']', '').strip()
+    args = content.split()
+    if len(args) < 2:
+        bot.reply_to(message, "❌ Format Error! Use: `/deliverff buyer_id item_id`", parse_mode="Markdown")
         return
 
     try:
-        buyer_id = int(args[1])
-        item_id = str(args[2])
+        buyer_id = int(args[0])
+        item_id = str(args[1])
     except ValueError:
-        bot.reply_to(message, "❌ **Error:** ID and User ID must be numeric digits!")
+        bot.reply_to(message, "❌ Error: IDs must be numbers!")
         return
 
     stock = load_data(DATA_FILE)
     if item_id not in stock or stock[item_id]['status'] == 'Sold':
-        bot.reply_to(message, "❌ **Error:** Asset not found or already dispatched!")
+        bot.reply_to(message, "❌ ID not found or already sold!", parse_mode="Markdown")
         return
 
     stock[item_id]['status'] = 'Sold'
@@ -367,21 +347,22 @@ def deliver_ff(message):
     try:
         bot.send_message(
             buyer_id,
-            "┏━━ 🎉 **ORDER FULFILLED** 🎉 ━━┓\n\n"
-            f"🔥 **Level:** `{item['level']}`\n"
-            f"📦 **UID / Details:** `{item['bundles']}`\n"
-            f"💵 **Price:** `₹{item['price']}`\n\n"
-            "✨ *Thank you for trading with us! Enjoy your gaming experience.*"
+            "🎉 **ORDER FULFILLED SUCCESSFULLY!**\n"
+            f"• **Level:** `{item['level']}`\n"
+            f"• **UID/Details:** `{item['bundles']}`\n"
+            f"• **Price:** `₹{item['price']}`\n\n"
+            "✨ *Thank you for purchasing! Enjoy your game.*"
         )
     except Exception as e:
         pass
 
-    bot.reply_to(message, f"✅ Asset successfully dispatched to client (`{buyer_id}`)!", parse_mode="Markdown")
+    bot.reply_to(message, f"✅ ID delivered successfully to buyer (`{buyer_id}`)!", parse_mode="Markdown")
 
 if __name__ == '__main__':
     keep_alive()
     bot.remove_webhook()
     bot.infinity_polling(skip_pending=True)
+
 
     
     
