@@ -261,10 +261,11 @@ def handle_text_messages(message):
     bot.send_message(ADMIN_ID, admin_msg, parse_mode="Markdown")
     bot.reply_to(message, "✅ Code submitted successfully! Admin will verify and deliver your ID soon.")
 
-# Super-safe Admin command to add ID (/addff) with instant success confirmation
+# Admin command to add ID (/addff) with ID verification & success confirmation
 @bot.message_handler(commands=['addff'])
 def add_ff(message):
     if message.from_user.id != ADMIN_ID:
+        bot.reply_to(message, f"❌ Unauthorized! Your ID (`{message.from_user.id}`) is not Admin.", parse_mode="Markdown")
         return
     try:
         content = message.text.replace('/addff', '').strip()
@@ -299,7 +300,6 @@ def add_ff(message):
         }
         save_data(DATA_FILE, stock)
         
-        # Explicit Success Confirmation Message
         success_text = (
             "┏━━━ ✅ **ID ADDED SUCCESSFULLY** ━━━┓\n"
             f"✦ **Index ID:** `{item_id}`\n"
@@ -316,6 +316,7 @@ def add_ff(message):
 @bot.message_handler(commands=['addbalance'])
 def add_balance_cmd(message):
     if message.from_user.id != ADMIN_ID:
+        bot.reply_to(message, f"❌ Unauthorized! Your ID (`{message.from_user.id}`) is not Admin.", parse_mode="Markdown")
         return
     try:
         content = message.text.replace('/addbalance', '').replace('[', '').replace(']', '').strip()
@@ -339,6 +340,7 @@ def add_balance_cmd(message):
 @bot.message_handler(commands=['deliverff'])
 def deliver_ff(message):
     if message.from_user.id != ADMIN_ID:
+        bot.reply_to(message, f"❌ Unauthorized! Your ID (`{message.from_user.id}`) is not Admin.", parse_mode="Markdown")
         return
 
     content = message.text.replace('/deliverff', '').replace('[', '').replace(']', '').strip()
@@ -392,6 +394,7 @@ if __name__ == '__main__':
     keep_alive()
     bot.remove_webhook()
     bot.infinity_polling(skip_pending=True)
+                                          
 
     
 
