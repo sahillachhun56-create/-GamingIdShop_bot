@@ -7,7 +7,7 @@ from threading import Thread
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # यहाँ अपना पूरा असली Telegram Bot Token डालें
-API_TOKEN = "8497566219:AAG_0uAIRgCW_EQdoeq5GjV5CXVs-7I7CEs"
+API_TOKEN = "8497566219:AAHnRHgH82XdD3gX_ydz4K_7opkKHgjitAU"
 bot = telebot.TeleBot(API_TOKEN)
 ADMIN_ID = 8380823727
 
@@ -345,6 +345,7 @@ def callbacks(call):
     except Exception as e:
         pass
 
+# Handle user sending redeem code in chat
 @bot.message_handler(func=lambda message: True)
 def handle_text_messages(message):
     user = message.from_user
@@ -381,13 +382,19 @@ def handle_text_messages(message):
         "⚡ *Quick Deliver Command:*\n"
         f"`/deliverff {user.id} {item_id}`"
     )
-    bot.send_message(ADMIN_ID, admin_msg, parse_mode="Markdown")
+    
+    try:
+        bot.send_message(ADMIN_ID, admin_msg, parse_mode="Markdown")
+    except Exception as e:
+        pass
+        
     bot.reply_to(message, "✅ Code submitted successfully! Admin will verify and deliver your ID soon.")
 
 if __name__ == '__main__':
     keep_alive()
     bot.remove_webhook()
     bot.infinity_polling(skip_pending=True)
+    
                          
     
                                           
