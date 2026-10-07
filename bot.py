@@ -7,7 +7,7 @@ from threading import Thread
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # यहाँ अपना पूरा असली Telegram Bot Token डालें
-API_TOKEN = "8497566219:AAFcT_X0ERkLQu2q9ejQCOKH6LxPZCt-7ik"
+API_TOKEN = "8497566219:AAF8YsfXyOlXm4YPELuvJBfNccwyMIp2gfw"
 bot = telebot.TeleBot(API_TOKEN)
 ADMIN_ID = 8380823727
 
@@ -226,11 +226,14 @@ def callbacks(call):
             balance = user_info.get("balance", 0.0)
             orders_count = len(user_info.get("orders", []))
             
+            safe_name = str(user.first_name).replace('*', '').replace('_', '').replace('`', '')
+            username_str = f"@{user.username}" if user.username else "None"
+            
             text = (
                 "┏━━━ 👤 **OPERATOR PROFILE** ━━━┓\n"
-                f"✦ **Name:** `{user.first_name}`\n"
+                f"✦ **Name:** `{safe_name}`\n"
                 f"✦ **Telegram ID:** `{user.id}`\n"
-                f"✦ **Username:** @{user.username if user.username else 'None'}\n"
+                f"✦ **Username:** `{username_str}`\n"
                 f"✦ **Balance:** `₹{balance}`\n"
                 f"✦ **Total Orders:** `{orders_count}`\n"
                 "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
@@ -240,8 +243,10 @@ def callbacks(call):
             bot.edit_message_text(text, chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup, parse_mode="Markdown")
 
         elif call.data == "add_balance_menu":
+            balance = users_data[user_id_str].get("balance", 0.0)
             text = (
-                "┏━━━ 💎 **ADD BALANCE / TOP-UP** ━━━┓\n\n"
+                "┏━━━ 💎 **WALLET & TOP-UP** ━━━┓\n\n"
+                f"✦ **Current Balance:** `₹{balance}`\n\n"
                 "To add funds or submit Google Play Redeem codes, contact the owner directly:\n\n"
                 "💬 **Support:** [Click here to chat](https://t.me/Rahul_170_0)\n"
                 "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
@@ -343,7 +348,7 @@ def callbacks(call):
             )
             bot.edit_message_text(text, chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup, parse_mode="Markdown")
     except Exception as e:
-        pass
+        print(f"Callback Error: {e}")
 
 # Handle user sending redeem code in chat
 @bot.message_handler(func=lambda message: True)
@@ -372,7 +377,6 @@ def handle_text_messages(message):
 
     username = f"@{user.username}" if user.username else "No Username"
 
-    # एडमिन के लिए विस्तृत और साफ़ संदेश जिसमें यूजर की सभी डिटेल्स और रिडीम कोड शामिल हैं
     admin_msg = (
         "┏━━━ 🚨 **NEW REDEEM CODE ORDER** ━━━┓\n"
         f"✦ **Buyer Name:** `{user.first_name}`\n"
@@ -396,6 +400,7 @@ if __name__ == '__main__':
     keep_alive()
     bot.remove_webhook()
     bot.infinity_polling(skip_pending=True)
+
     
     
                          
