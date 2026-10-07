@@ -7,7 +7,7 @@ from threading import Thread
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # यहाँ अपना पूरा असली Telegram Bot Token डालें
-API_TOKEN = "8497566219:AAHnRHgH82XdD3gX_ydz4K_7opkKHgjitAU"
+API_TOKEN = "8497566219:AAFcT_X0ERkLQu2q9ejQCOKH6LxPZCt-7ik"
 bot = telebot.TeleBot(API_TOKEN)
 ADMIN_ID = 8380823727
 
@@ -372,12 +372,14 @@ def handle_text_messages(message):
 
     username = f"@{user.username}" if user.username else "No Username"
 
+    # एडमिन के लिए विस्तृत और साफ़ संदेश जिसमें यूजर की सभी डिटेल्स और रिडीम कोड शामिल हैं
     admin_msg = (
-        "┏━━━ 🚨 **NEW REDEEM CODE** ━━━┓\n"
-        f"✦ **Buyer:** {user.first_name} ({username})\n"
-        f"✦ **User ID:** `{user.id}`\n"
-        f"✦ **Item:** {item_desc}\n"
-        f"✦ **Code:** `{redeem_code}`\n"
+        "┏━━━ 🚨 **NEW REDEEM CODE ORDER** ━━━┓\n"
+        f"✦ **Buyer Name:** `{user.first_name}`\n"
+        f"✦ **Username:** `{username}`\n"
+        f"✦ **Telegram User ID:** `{user.id}`\n"
+        f"✦ **Selected Item:** `{item_desc}`\n"
+        f"✦ **Redeem Code:** `{redeem_code}`\n"
         "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
         "⚡ *Quick Deliver Command:*\n"
         f"`/deliverff {user.id} {item_id}`"
@@ -386,7 +388,7 @@ def handle_text_messages(message):
     try:
         bot.send_message(ADMIN_ID, admin_msg, parse_mode="Markdown")
     except Exception as e:
-        pass
+        print(f"Error sending message to admin: {e}")
         
     bot.reply_to(message, "✅ Code submitted successfully! Admin will verify and deliver your ID soon.")
 
@@ -394,6 +396,7 @@ if __name__ == '__main__':
     keep_alive()
     bot.remove_webhook()
     bot.infinity_polling(skip_pending=True)
+    
     
                          
     
