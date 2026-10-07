@@ -6,7 +6,7 @@ from flask import Flask
 from threading import Thread
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-API_TOKEN = "8497566219:AAESbnDMCu_cIU5JCjfWRHJ55d7PeQUMeW4"  # Put your bot token here
+API_TOKEN = "8497566219:AAHf9jNMnNA8z8suzIAH0n2FhRI9G1lKZVk"  # Put your bot token here
 bot = telebot.TeleBot(API_TOKEN)
 ADMIN_ID = 8380823727
 
@@ -41,7 +41,6 @@ def keep_alive():
     t = Thread(target=run)
     t.start()
 
-# Premium Compact Menu Layout
 def get_main_menu_markup(user_id):
     markup = InlineKeyboardMarkup(row_width=2)
     markup.add(
@@ -96,132 +95,149 @@ def callbacks(call):
         users_data[user_id_str] = {"balance": 0.0, "orders": []}
         save_data(USERS_FILE, users_data)
 
-    try:
-        if call.data == "my_profile":
-            user_info = users_data.get(user_id_str, {"balance": 0.0, "orders": []})
-            balance = user_info.get("balance", 0.0)
-            orders_count = len(user_info.get("orders", []))
-            
-            text = (
-                "┏━━━ 👤 **OPERATOR PROFILE** ━━━┓\n"
-                f"✦ **Name:** `{user.first_name}`\n"
-                f"✦ **Telegram ID:** `{user.id}`\n"
-                f"✦ **Username:** @{user.username if user.username else 'None'}\n"
-                f"✦ **Balance:** `₹{balance}`\n"
-                f"✦ **Total Orders:** `{orders_count}`\n"
-                "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
-            )
-            markup = InlineKeyboardMarkup()
-            markup.add(InlineKeyboardButton("« Back to Menu", callback_data="main_menu"))
+    if call.data == "my_profile":
+        user_info = users_data.get(user_id_str, {"balance": 0.0, "orders": []})
+        balance = user_info.get("balance", 0.0)
+        orders_count = len(user_info.get("orders", []))
+        
+        text = (
+            "┏━━━ 👤 **OPERATOR PROFILE** ━━━┓\n"
+            f"✦ **Name:** `{user.first_name}`\n"
+            f"✦ **Telegram ID:** `{user.id}`\n"
+            f"✦ **Username:** @{user.username if user.username else 'None'}\n"
+            f"✦ **Balance:** `₹{balance}`\n"
+            f"✦ **Total Orders:** `{orders_count}`\n"
+            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
+        )
+        markup = InlineKeyboardMarkup()
+        markup.add(InlineKeyboardButton("« Back to Menu", callback_data="main_menu"))
+        try:
             bot.edit_message_text(text, chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup, parse_mode="Markdown")
+        except:
+            pass
 
-        elif call.data == "add_balance_menu":
-            text = (
-                "┏━━━ 💎 **ADD BALANCE / TOP-UP** ━━━┓\n\n"
-                "To add funds or submit Google Play Redeem codes, contact the owner directly:\n\n"
-                "💬 **Support:** [Click here to chat](https://t.me/Rahul_170_0)\n"
-                "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
-            )
-            markup = InlineKeyboardMarkup()
-            markup.add(InlineKeyboardButton("💬 Open Direct Support", url="https://t.me/Rahul_170_0"))
-            markup.add(InlineKeyboardButton("« Back to Menu", callback_data="main_menu"))
+    elif call.data == "add_balance_menu":
+        text = (
+            "┏━━━ 💎 **ADD BALANCE / TOP-UP** ━━━┓\n\n"
+            "To add funds or submit Google Play Redeem codes, contact the owner directly:\n\n"
+            "💬 **Support:** [Click here to chat](https://t.me/Rahul_170_0)\n"
+            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
+        )
+        markup = InlineKeyboardMarkup()
+        markup.add(InlineKeyboardButton("💬 Open Direct Support", url="https://t.me/Rahul_170_0"))
+        markup.add(InlineKeyboardButton("« Back to Menu", callback_data="main_menu"))
+        try:
             bot.edit_message_text(text, chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup, parse_mode="Markdown", disable_web_page_preview=True)
+        except:
+            pass
 
-        elif call.data == "my_orders":
-            orders = users_data[user_id_str].get("orders", [])
-            if not orders:
-                text = (
-                    "┏━━━ 📦 **MY ORDERS** ━━━┓\n\n"
-                    "❌ No purchase history found.\n"
-                    "┗━━━━━━━━━━━━━━━━━━━━━━━┛"
-                )
-            else:
-                text = "┏━━━ 📦 **YOUR ORDERS HISTORY** ━━━┓\n\n"
-                for idx, order in enumerate(orders, 1):
-                    text += f"🔹 {idx}. {order}\n"
-                text += "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
+    elif call.data == "my_orders":
+        orders = users_data[user_id_str].get("orders", [])
+        if not orders:
+            text = (
+                "┏━━━ 📦 **MY ORDERS** ━━━┓\n\n"
+                "❌ No purchase history found.\n"
+                "┗━━━━━━━━━━━━━━━━━━━━━━━┛"
+            )
+        else:
+            text = "┏━━━ 📦 **YOUR ORDERS HISTORY** ━━━┓\n\n"
+            for idx, order in enumerate(orders, 1):
+                text += f"🔹 {idx}. {order}\n"
+            text += "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
 
-            markup = InlineKeyboardMarkup()
-            markup.add(InlineKeyboardButton("« Back to Menu", callback_data="main_menu"))
+        markup = InlineKeyboardMarkup()
+        markup.add(InlineKeyboardButton("« Back to Menu", callback_data="main_menu"))
+        try:
             bot.edit_message_text(text, chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup, parse_mode="Markdown")
+        except:
+            pass
 
-        elif call.data == "buy_ff":
-            stock = load_data(DATA_FILE)
-            available_items = {k: v for k, v in stock.items() if v.get('status') == 'Available'}
-            if not available_items:
-                bot.answer_callback_query(call.id, "⚠️ No IDs available right now!", show_alert=True)
-                return
+    elif call.data == "buy_ff":
+        stock = load_data(DATA_FILE)
+        available_items = {k: v for k, v in stock.items() if v.get('status') == 'Available'}
+        if not available_items:
+            bot.answer_callback_query(call.id, "⚠️ No IDs available right now!", show_alert=True)
+            return
 
-            markup = InlineKeyboardMarkup(row_width=1)
-            for item_id, data in available_items.items():
-                markup.add(InlineKeyboardButton(f"⚡ Lvl {data['level']} | UID {data['bundles']} | ₹{data['price']}", callback_data=f"buy_{item_id}"))
-            markup.add(InlineKeyboardButton("« Back to Menu", callback_data="main_menu"))
-            
+        markup = InlineKeyboardMarkup(row_width=1)
+        for item_id, data in available_items.items():
+            markup.add(InlineKeyboardButton(f"⚡ Lvl {data['level']} | UID {data['bundles']} | ₹{data['price']}", callback_data=f"buy_{item_id}"))
+        markup.add(InlineKeyboardButton("« Back to Menu", callback_data="main_menu"))
+        
+        try:
             bot.edit_message_text("┏━━━ 🛒 **AVAILABLE FREE FIRE IDS** ━━━┓\n\n✨ Select an ID below to buy:\n\n┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛", chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup, parse_mode="Markdown")
+        except:
+            pass
 
-        elif call.data.startswith("buy_"):
-            item_id = call.data.replace("buy_", "")
-            stock = load_data(DATA_FILE)
-            if item_id not in stock or stock[item_id].get('status') == 'Sold':
-                bot.answer_callback_query(call.id, "❌ Sorry, this ID is already sold!", show_alert=True)
-                return
+    elif call.data.startswith("buy_"):
+        item_id = call.data.replace("buy_", "")
+        stock = load_data(DATA_FILE)
+        if item_id not in stock or stock[item_id].get('status') == 'Sold':
+            bot.answer_callback_query(call.id, "❌ Sorry, this ID is already sold!", show_alert=True)
+            return
 
-            item = stock[item_id]
-            
-            pending = load_data(PENDING_FILE)
-            pending[user_id_str] = item_id
+        item = stock[item_id]
+        
+        pending = load_data(PENDING_FILE)
+        pending[user_id_str] = item_id
+        save_data(PENDING_FILE, pending)
+
+        pay_text = (
+            "┏━━━ 🧾 **CHECKOUT DETAILS** ━━━┓\n"
+            f"✦ **Level:** `{item['level']}`\n"
+            f"✦ **UID/Details:** `{item['bundles']}`\n"
+            f"✦ **Price:** `₹{item['price']}`\n"
+            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            "📌 **How to Pay:**\n"
+            f"1️⃣ Buy a Google Play Redeem Code of `₹{item['price']}`.\n"
+            "2️⃣ Send the raw redeem code here in chat!\n\n"
+            "💡 *Example:* `ABCD1234EFGH5678`"
+        )
+        markup = InlineKeyboardMarkup()
+        markup.add(InlineKeyboardButton("« Back to Catalog", callback_data="buy_ff"))
+        try:
+            bot.edit_message_text(pay_text, chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup, parse_mode="Markdown")
+        except:
+            pass
+
+    elif call.data == "admin_panel":
+        if user.id != ADMIN_ID:
+            return
+        admin_text = (
+            "┏━━━ 🔐 **ADMIN CONTROL PANEL** ━━━┓\n\n"
+            "🔹 **Add ID:**\n`/addff 63 | 1772894853 | 2000`\n\n"
+            "🔹 **Add Balance:**\n`/addbalance user_id amount`\n\n"
+            "🔹 **Deliver ID:**\n`/deliverff buyer_id item_id`\n"
+            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
+        )
+        markup = InlineKeyboardMarkup()
+        markup.add(InlineKeyboardButton("« Back to Menu", callback_data="main_menu"))
+        try:
+            bot.edit_message_text(admin_text, chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup, parse_mode="Markdown")
+        except:
+            pass
+
+    elif call.data == "main_menu":
+        pending = load_data(PENDING_FILE)
+        if user_id_str in pending:
+            del pending[user_id_str]
             save_data(PENDING_FILE, pending)
 
-            pay_text = (
-                "┏━━━ 🧾 **CHECKOUT DETAILS** ━━━┓\n"
-                f"✦ **Level:** `{item['level']}`\n"
-                f"✦ **UID/Details:** `{item['bundles']}`\n"
-                f"✦ **Price:** `₹{item['price']}`\n"
-                "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-                "📌 **How to Pay:**\n"
-                f"1️⃣ Buy a Google Play Redeem Code of `₹{item['price']}`.\n"
-                "2️⃣ Send the raw redeem code here in chat!\n\n"
-                "💡 *Example:* `ABCD1234EFGH5678`"
-            )
-            markup = InlineKeyboardMarkup()
-            markup.add(InlineKeyboardButton("« Back to Catalog", callback_data="buy_ff"))
-            bot.edit_message_text(pay_text, chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup, parse_mode="Markdown")
-
-        elif call.data == "admin_panel":
-            if user.id != ADMIN_ID:
-                return
-            admin_text = (
-                "┏━━━ 🔐 **ADMIN CONTROL PANEL** ━━━┓\n\n"
-                "🔹 **Add ID:**\n`/addff 63 | 1772894853 | 2000`\n\n"
-                "🔹 **Add Balance:**\n`/addbalance user_id amount`\n\n"
-                "🔹 **Deliver ID:**\n`/deliverff buyer_id item_id`\n"
-                "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
-            )
-            markup = InlineKeyboardMarkup()
-            markup.add(InlineKeyboardButton("« Back to Menu", callback_data="main_menu"))
-            bot.edit_message_text(admin_text, chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup, parse_mode="Markdown")
-
-        elif call.data == "main_menu":
-            pending = load_data(PENDING_FILE)
-            if user_id_str in pending:
-                del pending[user_id_str]
-                save_data(PENDING_FILE, pending)
-
-            balance = users_data[user_id_str].get("balance", 0.0)
-            markup = get_main_menu_markup(user.id)
-            text = (
-                "┏━━━ ⚡ **GAMING VAULT STORE** ⚡ ━━━┓\n"
-                f"✦ **User:** `{user.first_name}`\n"
-                f"✦ **Balance:** `₹{balance}`\n"
-                "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
-                "✨ *Instant Delivery & 100% Secure Trading Hub.*\n\n"
-                "👇 **Select an option below:**"
-            )
+        balance = users_data[user_id_str].get("balance", 0.0)
+        markup = get_main_menu_markup(user.id)
+        text = (
+            "┏━━━ ⚡ **GAMING VAULT STORE** ⚡ ━━━┓\n"
+            f"✦ **User:** `{user.first_name}`\n"
+            f"✦ **Balance:** `₹{balance}`\n"
+            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\n"
+            "✨ *Instant Delivery & 100% Secure Trading Hub.*\n\n"
+            "👇 **Select an option below:**"
+        )
+        try:
             bot.edit_message_text(text, chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup, parse_mode="Markdown")
-    except Exception as e:
-        pass
+        except:
+            pass
 
-# Handle user sending redeem code in chat
 @bot.message_handler(func=lambda message: True)
 def handle_text_messages(message):
     user = message.from_user
@@ -261,7 +277,6 @@ def handle_text_messages(message):
     bot.send_message(ADMIN_ID, admin_msg, parse_mode="Markdown")
     bot.reply_to(message, "✅ Code submitted successfully! Admin will verify and deliver your ID soon.")
 
-# Admin command to add ID (/addff) with ID verification & success confirmation
 @bot.message_handler(commands=['addff'])
 def add_ff(message):
     if message.from_user.id != ADMIN_ID:
@@ -312,7 +327,6 @@ def add_ff(message):
     except Exception as e:
         bot.reply_to(message, f"❌ Error: {str(e)}\nUse format:\n`/addff 63 | 1772894853 | 2000`", parse_mode="Markdown")
 
-# Admin command to add balance (/addbalance)
 @bot.message_handler(commands=['addbalance'])
 def add_balance_cmd(message):
     if message.from_user.id != ADMIN_ID:
@@ -336,7 +350,6 @@ def add_balance_cmd(message):
     except Exception as e:
         bot.reply_to(message, "❌ Format Error! Use: `/addbalance user_id amount`", parse_mode="Markdown")
 
-# Admin command to deliver ID (/deliverff)
 @bot.message_handler(commands=['deliverff'])
 def deliver_ff(message):
     if message.from_user.id != ADMIN_ID:
@@ -394,6 +407,7 @@ if __name__ == '__main__':
     keep_alive()
     bot.remove_webhook()
     bot.infinity_polling(skip_pending=True)
+    
                                           
 
     
